@@ -3,12 +3,13 @@ function NosePoke()
 
 global BpodSystem
 global TaskParameters
+global nidaq
 
 %% Task parameters
 TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %general
-    TaskParameters.GUI.Ports_LMR = '134';
+    TaskParameters.GUI.Ports_LMR = '123';
     TaskParameters.GUI.FI = 1; % (s)
     TaskParameters.GUI.VI = false;
     TaskParameters.GUIMeta.VI.Style = 'checkbox';
@@ -56,6 +57,65 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.DelaySigma=0;
     TaskParameters.GUI.DelayGracePeriod=0;
     TaskParameters.GUIPanels.RewardDelay = {'DelayMean','DelaySigma','DelayGracePeriod'};
+    
+    %% Photometry
+    %photometry general
+    TaskParameters.GUI.Photometry=0;
+    TaskParameters.GUIMeta.Photometry.Style='checkbox';
+    TaskParameters.GUI.DbleFibers=0;
+    TaskParameters.GUIMeta.DbleFibers.Style='checkbox';
+    TaskParameters.GUIMeta.DbleFibers.String='Auto';
+    TaskParameters.GUI.Isobestic405=0;
+    TaskParameters.GUIMeta.Isobestic405.Style='checkbox';
+    TaskParameters.GUIMeta.Isobestic405.String='Auto';
+    TaskParameters.GUI.RedChannel=1;
+    TaskParameters.GUIMeta.RedChannel.Style='checkbox';
+    TaskParameters.GUIMeta.RedChannel.String='Auto';    
+    TaskParameters.GUIPanels.PhotometryRecording={'Photometry','DbleFibers','Isobestic405','RedChannel'};
+    
+    %plot photometry
+    TaskParameters.GUI.TimeMin=-4;
+    TaskParameters.GUI.TimeMax=4;
+    TaskParameters.GUI.NidaqMin=-5;
+    TaskParameters.GUI.NidaqMax=10;
+    TaskParameters.GUI.StateToZero=1;
+	TaskParameters.GUIMeta.StateToZero.Style='popupmenu';
+    TaskParameters.GUIMeta.StateToZero.String={'wait_Sin'};
+    TaskParameters.GUI.BaselineBegin=0.1;
+    TaskParameters.GUI.BaselineEnd=1.1;
+    TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','StateToZero','BaselineBegin','BaselineEnd'};
+    
+    %% Nidaq and Photometry
+    TaskParameters.GUI.PhotometryVersion=1;
+    TaskParameters.GUI.Modulation=1;
+    TaskParameters.GUIMeta.Modulation.Style='checkbox';
+    TaskParameters.GUIMeta.Modulation.String='Auto';
+	TaskParameters.GUI.NidaqDuration=4;
+    TaskParameters.GUI.NidaqSamplingRate=6100;
+    TaskParameters.GUI.DecimateFactor=610;
+    TaskParameters.GUI.LED1_Name='Fiber1 470-A1';
+    TaskParameters.GUI.LED1_Amp=2;
+    TaskParameters.GUI.LED1_Freq=211;
+    TaskParameters.GUI.LED2_Name='Fiber1 405 / 565';
+    TaskParameters.GUI.LED2_Amp=2;
+    TaskParameters.GUI.LED2_Freq=531;
+    TaskParameters.GUI.LED1b_Name='Fiber2 470-mPFC';
+    TaskParameters.GUI.LED1b_Amp=2;
+    TaskParameters.GUI.LED1b_Freq=531;
+
+    TaskParameters.GUIPanels.PhotometryNidaq={'PhotometryVersion','Modulation','NidaqDuration',...
+                            'NidaqSamplingRate','DecimateFactor',...
+                            'LED1_Name','LED1_Amp','LED1_Freq',...
+                            'LED2_Name','LED2_Amp','LED2_Freq',...
+                            'LED1b_Name','LED1b_Amp','LED1b_Freq'};
+                        
+    %% rig-specific
+        TaskParameters.GUI.nidaqDev='Dev2';
+        
+        TaskParameters.GUIPanels.PhotometryRig={'nidaqDev'};
+    
+    TaskParameters.GUITabs.General = {'General','Sampling','Reward','RewardDelay'};
+    TaskParameters.GUITabs.Photometry = {'PhotometryRecording','PhotometryNidaq','PhotometryPlot','PhotometryRig'};
     
         
     TaskParameters.GUI = orderfields(TaskParameters.GUI);
@@ -112,6 +172,21 @@ BpodSystem.GUIHandles.OutcomePlot.HandleST = axes('Position',           [5*.05 +
 BpodSystem.GUIHandles.OutcomePlot.HandleMT = axes('Position',           [6*.05 + 6*.08   .6  .1  .3], 'Visible', 'off');
 NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'init');
 
+%% NIDAQ Initialization and Plots
+if TaskParameters.GUI.Photometry
+if (TaskParameters.GUI.DbleFibers+TaskParameters.GUI.Isobestic405+TaskParameters.GUI.RedChannel)*TaskParameters.GUI.Photometry >1
+    disp('Error - Incorrect photometry recording parameters')
+    return
+end
+
+Nidaq_photometry('ini');
+
+FigNidaq1=Online_NidaqPlot('ini','470');
+if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.Isobestic405 || TaskParameters.GUI.RedChannel
+    FigNidaq2=Online_NidaqPlot('ini','channel2');
+end
+end
+
 %% Main loop
 RunSession = true;
 iTrial = 1;
@@ -122,7 +197,26 @@ while RunSession
     
     sma = stateMatrix(iTrial);
     SendStateMatrix(sma);
+    
+    %% NIDAQ Get nidaq ready to start
+    if TaskParameters.GUI.Photometry
+    Nidaq_photometry('WaitToStart');
+    end
+    
+    %% Run Trial
     RawEvents = RunStateMatrix;
+    
+    %% NIDAQ Stop acquisition and save data in bpod structure
+    if TaskParameters.GUI.Photometry
+    Nidaq_photometry('Stop');
+    [PhotoData,Photo2Data]=Nidaq_photometry('Save');
+    BpodSystem.Data.NidaqData{iTrial}=PhotoData;
+    if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
+        BpodSystem.Data.Nidaq2Data{iTrial}=Photo2Data;
+    end
+    end
+    
+    %% Bpod save
     if ~isempty(fieldnames(RawEvents))
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents);
         SaveBpodSessionData;
@@ -132,10 +226,49 @@ while RunSession
         return
     end
     
+    %% update fields
     updateCustomDataFields(iTrial)
+    
+    %% update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
+    % plot photometry data
+    if TaskParameters.GUI.Photometry
+    [currentNidaq1, rawNidaq1]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED1,TaskParameters.GUI.LED1_Freq,TaskParameters.GUI.LED1_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
+    FigNidaq1=Online_NidaqPlot('update',[],FigNidaq1,currentNidaq1,rawNidaq1);
+    
+    if TaskParameters.GUI.Isobestic405 || TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
+        if TaskParameters.GUI.Isobestic405
+        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
+        elseif TaskParameters.GUI.RedChannel
+        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
+        elseif TaskParameters.GUI.DbleFibers
+        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED1b_Freq,TaskParameters.GUI.LED1b_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
+        end
+        FigNidaq2=Online_NidaqPlot('update',[],FigNidaq2,currentNidaq2,rawNidaq2);
+    end
+    end
+    
     iTrial = iTrial + 1;    
 end
+
+%% photometry check
+if TaskParameters.GUI.Photometry
+    thismax=max(PhotoData(TaskParameters.GUI.NidaqSamplingRate:TaskParameters.GUI.NidaqSamplingRate*2,1))
+    if thismax>4 || thismax<0.3
+        disp('WARNING - Something is wrong with fiber #1 - run check-up! - unpause to ignore')
+        BpodSystem.Pause=1;
+        HandlePauseCondition;
+    end
+    if TaskParameters.GUI.DbleFibers
+    thismax=max(Photo2Data(TaskParameters.GUI.NidaqSamplingRate:TaskParameters.GUI.NidaqSamplingRate*2,1))
+    if thismax>4 || thismax<0.3
+        disp('WARNING - Something is wrong with fiber #2 - run check-up! - unpause to ignore')
+        BpodSystem.Pause=1;
+        HandlePauseCondition;
+    end
+    end
+end
+
 end
 
 function sma = stateMatrix(iTrial)
@@ -355,7 +488,7 @@ end
 function updateCustomDataFields(iTrial)
 global BpodSystem
 global TaskParameters
-
+BpodSystem.Data.TrialTypes(iTrial)=1;
 %% OutcomeRecord
 statesThisTrial = BpodSystem.Data.RawData.OriginalStateNamesByNumber{iTrial}(BpodSystem.Data.RawData.OriginalStateData{iTrial});
 BpodSystem.Data.Custom.ST(iTrial) = NaN;
