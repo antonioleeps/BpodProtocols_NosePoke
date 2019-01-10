@@ -16,6 +16,10 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.CurrentTrialCross = line(-1,0.5, 'LineStyle','none','Marker','+','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.RewardedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','g', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.RewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','g', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.UnrewardedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.UnrewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.SkippedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','w','MarkerFace','w', 'MarkerSize',4);
+        BpodSystem.GUIHandles.OutcomePlot.SkippedR = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','w','MarkerFace','w', 'MarkerSize',4);
         BpodSystem.GUIHandles.OutcomePlot.EarlyWithdrawal = line(-1,0, 'LineStyle','none','Marker','d','MarkerEdge','none','MarkerFace','b', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.Jackpot = line(-1,0, 'LineStyle','none','Marker','x','MarkerEdge','r','MarkerFace','r', 'MarkerSize',7);
         BpodSystem.GUIHandles.OutcomePlot.CumRwd = text(1,1,'0mL','verticalalignment','bottom','horizontalalignment','center');
@@ -46,12 +50,14 @@ switch Action
         hold(AxesHandles.HandleMT,'on')
         AxesHandles.HandleMT.XLabel.String = 'Time (ms)';
         AxesHandles.HandleMT.YLabel.String = 'trial counts';
-        AxesHandles.HandleMT.Title.String = 'Mouvement time';
+        AxesHandles.HandleMT.Title.String = 'Movement time';
         
     case 'update'
         
         CurrentTrial = varargin{1};
         ChoiceLeft = BpodSystem.Data.Custom.ChoiceLeft;
+        Rewarded =  BpodSystem.Data.Custom.Rewarded;
+        Correct =  BpodSystem.Data.Custom.Correct;
         
         % recompute xlim
         [mn, ~] = rescaleX(AxesHandles.HandleOutcome,CurrentTrial,nTrialsToShow);
@@ -77,14 +83,30 @@ switch Action
         %Plot past trials
         if ~isempty(ChoiceLeft)
             indxToPlot = mn:CurrentTrial;
-            %Plot Rewarded Left
-            ndxRwdL = ChoiceLeft(indxToPlot) == 1;
+            %Plot correct Left
+            ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1;
             Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
             set(BpodSystem.GUIHandles.OutcomePlot.RewardedL, 'xdata', Xdata, 'ydata', Ydata);
-            %Plot Rewarded Right
-            ndxRwdR = ChoiceLeft(indxToPlot) == 0;
+            %Plot correct Right
+            ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1;
             Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
             set(BpodSystem.GUIHandles.OutcomePlot.RewardedR, 'xdata', Xdata, 'ydata', Ydata);
+            %Plot error left
+            ndxRwdL = ChoiceLeft(indxToPlot) == 1  & Correct(indxToPlot) == 0;
+            Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
+            set(BpodSystem.GUIHandles.OutcomePlot.UnrewardedL, 'xdata', Xdata, 'ydata', Ydata);      
+            %Plot error right
+            ndxRwdR = ChoiceLeft(indxToPlot) == 0 & Correct(indxToPlot) == 0;
+            Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
+            set(BpodSystem.GUIHandles.OutcomePlot.UnrewardedR, 'xdata', Xdata, 'ydata', Ydata);
+            %plot if left correct was not rewarded
+            ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & Rewarded(indxToPlot) == 0;
+            Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
+            set(BpodSystem.GUIHandles.OutcomePlot.SkippedL, 'xdata', Xdata, 'ydata', Ydata);
+            %plot if right correct was not rewarded
+            ndxRwdR = ChoiceLeft(indxToPlot) == 0 & Correct(indxToPlot) == 1 & Rewarded(indxToPlot) == 0;
+            Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
+            set(BpodSystem.GUIHandles.OutcomePlot.SkippedR, 'xdata', Xdata, 'ydata', Ydata);            
         end
         if ~isempty(BpodSystem.Data.Custom.EarlyWithdrawal)
             indxToPlot = mn:CurrentTrial;
@@ -141,7 +163,7 @@ switch Action
         EarlyP = sum(BpodSystem.Data.Custom.EarlyWithdrawal)/size(BpodSystem.Data.Custom.ChoiceLeft,2);
         cornertext(AxesHandles.HandleST,sprintf('P=%1.2f',EarlyP))
         
-        % MouvementTime
+        % MovementTime
         BpodSystem.GUIHandles.OutcomePlot.HandleMT.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleMT,'Children'),'Visible','on');
         cla(AxesHandles.HandleMT)
