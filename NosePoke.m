@@ -94,12 +94,15 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.NidaqSamplingRate=6100;
     TaskParameters.GUI.DecimateFactor=610;
     TaskParameters.GUI.LED1_Name='Fiber1 470-A1';
+    TaskParameters.GUIMeta.LED1_Name.Style='edittext';
     TaskParameters.GUI.LED1_Amp=2;
     TaskParameters.GUI.LED1_Freq=211;
     TaskParameters.GUI.LED2_Name='Fiber1 405 / 565';
+    TaskParameters.GUIMeta.LED2_Name.Style='edittext';
     TaskParameters.GUI.LED2_Amp=2;
     TaskParameters.GUI.LED2_Freq=531;
     TaskParameters.GUI.LED1b_Name='Fiber2 470-mPFC';
+    TaskParameters.GUIMeta.LED1b_Name.Style='edittext';
     TaskParameters.GUI.LED1b_Amp=2;
     TaskParameters.GUI.LED1b_Freq=531;
 
@@ -111,6 +114,7 @@ if isempty(fieldnames(TaskParameters))
                         
     %% rig-specific
         TaskParameters.GUI.nidaqDev='Dev2';
+        TaskParameters.GUIMeta.nidaqDev.Style='edittext';
         
         TaskParameters.GUIPanels.PhotometryRig={'nidaqDev'};
     
