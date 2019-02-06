@@ -78,10 +78,13 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.TimeMax=4;
     TaskParameters.GUI.NidaqMin=-5;
     TaskParameters.GUI.NidaqMax=10;
-    TaskParameters.GUI.StateToZero=1;
-	TaskParameters.GUIMeta.StateToZero.Style='popupmenu';
-    TaskParameters.GUIMeta.StateToZero.String={'wait_Sin'};
-    TaskParameters.GUI.BaselineBegin=0.1;
+    TaskParameters.GUI.SidePokeIn=1;
+	TaskParameters.GUIMeta.SidePokeIn.Style='checkbox';
+    TaskParameters.GUI.SidePokeLeave=1;
+	TaskParameters.GUIMeta.SidePokeLeave.Style='checkbox';
+    TaskParameters.GUI.Reward=1;
+	TaskParameters.GUIMeta.Reward.Style='checkbox';    
+     TaskParameters.GUI.BaselineBegin=0.1;
     TaskParameters.GUI.BaselineEnd=1.1;
     TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','StateToZero','BaselineBegin','BaselineEnd'};
     
@@ -139,7 +142,7 @@ BpodSystem.Data.Custom.CenterPortRewarded = false;
 BpodSystem.Data.Custom.GracePeriod = 0;
 BpodSystem.Data.Custom.LightLeft = rand(1,1)<0.5;
 BpodSystem.Data.Custom.RewardAvailable = rand(1,1)<TaskParameters.GUI.RewardProb;
-BpodSystem.Data.Custom.RewardDelay = randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean;
+BpodSystem.Data.Custom.RewardDelay = TaskParameters.GUI.DelayMean;
 BpodSystem.Data.Custom = orderfields(BpodSystem.Data.Custom);
 %server data
 [~,BpodSystem.Data.Custom.Rig] = system('hostname');
@@ -235,22 +238,40 @@ while RunSession
     
     %% update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
+
     % plot photometry data
     if TaskParameters.GUI.Photometry
-    [currentNidaq1, rawNidaq1]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED1,TaskParameters.GUI.LED1_Freq,TaskParameters.GUI.LED1_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
-    FigNidaq1=Online_NidaqPlot('update',[],FigNidaq1,currentNidaq1,rawNidaq1);
-    
-    if TaskParameters.GUI.Isobestic405 || TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
-        if TaskParameters.GUI.Isobestic405
-        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
-        elseif TaskParameters.GUI.RedChannel
-        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
-        elseif TaskParameters.GUI.DbleFibers
-        [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED1b_Freq,TaskParameters.GUI.LED1b_Amp,TaskParameters.GUIMeta.StateToZero.String{TaskParameters.GUI.StateToZero});
+            
+        Alignments = {[],[],[]};
+        if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
+            Alignments{1} = 'wait_Sin';
         end
-        FigNidaq2=Online_NidaqPlot('update',[],FigNidaq2,currentNidaq2,rawNidaq2);
-    end
-    end
+        if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(1:iTrial) && BpodSystem.Data.Custom.Rewarded(1:iTrial)==0
+            Alignments{2} = 'ITI';
+        end
+        if TaskParameters.GUI.Reward && BpodSystem.Data.Custom.Rewarded(iTrial)==1
+            Alignments{3} = 'water_';
+        end
+        
+        for k =1:length(Alignments)
+             align = Alignments{k};
+             if ~isempty(align)
+            [currentNidaq1, rawNidaq1]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED1,TaskParameters.GUI.LED1_Freq,TaskParameters.GUI.LED1_Amp,align);
+            FigNidaq1=Online_NidaqPlot('update',[],FigNidaq1,currentNidaq1,rawNidaq1,k);
+            
+            if TaskParameters.GUI.Isobestic405 || TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
+                if TaskParameters.GUI.Isobestic405
+                    [currentNidaq2, rawNidaq2]=Online_NidaqDemod(PhotoData(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,align);
+                elseif TaskParameters.GUI.RedChannel
+                    [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,align);
+                elseif TaskParameters.GUI.DbleFibers
+                    [currentNidaq2, rawNidaq2]=Online_NidaqDemod(Photo2Data(:,1),nidaq.LED2,TaskParameters.GUI.LED1b_Freq,TaskParameters.GUI.LED1b_Amp,align);
+                end
+                FigNidaq2=Online_NidaqPlot('update',[],FigNidaq2,currentNidaq2,rawNidaq2,k);
+            end
+             end%if non-empty align
+        end%alignment loop
+    end%if photometry
     
     iTrial = iTrial + 1;    
 end
@@ -585,7 +606,7 @@ BpodSystem.Data.Custom.CenterPortRewarded(iTrial+1) = false;
 BpodSystem.Data.Custom.GracePeriod(1:50,iTrial+1) = NaN(50,1);
 BpodSystem.Data.Custom.LightLeft(iTrial+1) = rand(1,1)<0.5;
 BpodSystem.Data.Custom.RewardAvailable(iTrial+1) = rand(1,1)<TaskParameters.GUI.RewardProb;
-BpodSystem.Data.Custom.RewardDelay(iTrial+1) = randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean;
+BpodSystem.Data.Custom.RewardDelay(iTrial+1) = abs( randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean);
 
 %stimuli
 if ~BpodSystem.EmulatorMode
@@ -659,15 +680,15 @@ end
 TaskParameters.GUI.SampleTime = BpodSystem.Data.Custom.SampleTime(iTrial+1); % update SampleTime
 
 %send bpod status to server
-try
-script = 'receivebpodstatus.php';
-%create a common "outcome" vector
-outcome = BpodSystem.Data.Custom.ChoiceLeft(1:iTrial); %1=left, 0=right
-outcome(BpodSystem.Data.Custom.EarlyWithdrawal(1:iTrial))=3; %early withdrawal=3
-outcome(BpodSystem.Data.Custom.Jackpot(1:iTrial))=4;%jackpot=4
-SendTrialStatusToServer(script,BpodSystem.Data.Custom.Rig,outcome,BpodSystem.Data.Custom.Subject,BpodSystem.CurrentProtocolName);
-catch
-end
+% try
+% script = 'receivebpodstatus.php';
+% %create a common "outcome" vector
+% outcome = BpodSystem.Data.Custom.ChoiceLeft(1:iTrial); %1=left, 0=right
+% outcome(BpodSystem.Data.Custom.EarlyWithdrawal(1:iTrial))=3; %early withdrawal=3
+% outcome(BpodSystem.Data.Custom.Jackpot(1:iTrial))=4;%jackpot=4
+% SendTrialStatusToServer(script,BpodSystem.Data.Custom.Rig,outcome,BpodSystem.Data.Custom.Subject,BpodSystem.CurrentProtocolName);
+% catch
+% end
 
 end
 

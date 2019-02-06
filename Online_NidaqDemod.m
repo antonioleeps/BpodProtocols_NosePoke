@@ -56,7 +56,17 @@ DFF=100*(Data-Fbaseline)/Fbaseline;
 
 %% Time
 Time=linspace(0,duration,ExpectedSize);
-TimeToZero=BpodSystem.Data.RawEvents.Trial{1,end}.States.(StateToZero)(1,1);
+statenames = fieldnames(SessionData.RawEvents.Trial{1,end}.States);
+stateidx=find(cellfun(@(x,a,n) strncmp(x,a,n),statenames,repmat({StateToZero},length(statenames),1),num2cell(length(StateToZero)*ones(length(statenames),1))));
+for i =1:length(stateidx)
+    times(i) = BpodSystem.Data.RawEvents.Trial{1,end}.States.(statenames{stateidx(i)})(1,1);
+end
+time0_idx = find(isnan(times));
+if length(time0_idx)>1
+    warning('State to zero not unique!')
+end
+TimeToZero=times(time0_idx(1));
+% TimeToZero=BpodSystem.Data.RawEvents.Trial{1,end}.States.(StateToZero)(1,1);
 Time=Time'-TimeToZero;
 
 %% Raw Data

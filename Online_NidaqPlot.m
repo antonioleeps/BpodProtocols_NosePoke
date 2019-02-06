@@ -1,4 +1,4 @@
-function figData=Online_NidaqPlot(action,phototitle,figData,newData470,nidaqRaw)
+function figData=Online_NidaqPlot(action,phototitle,figData,newData470,nidaqRaw,plotidx)
 global BpodSystem TaskParameters
 %% general ploting parameters
 labelx='Time (sec)'; labely='DF/F'; 
@@ -38,12 +38,12 @@ lastplot470=plot([-5 5],[0 0],'-g','LineWidth',MeanThickness);
 hold off
 
 %% Plot previous recordings
-subplotTitles={'all'};
-for i=1:1
+subplotTitles={'all  choice','leave','reward'};
+for i=1:3
     subplotTitles{i}=sprintf('%s',subplotTitles{i});
 end
 %Subplot
-for i=1:1
+for i=1:3
     photosubplot(i)=subplot(4,2,i+2);
     hold on
     title(subplotTitles(i));
@@ -71,27 +71,29 @@ figData.photosubplot=photosubplot;
 figData.meanplot=meanplot;
 
     case 'update'
-currentTrialType=BpodSystem.Data.TrialTypes(end);
+        
+
 %% Update last recording plot
 set(figData.lastplotRaw, 'Xdata',nidaqRaw(:,1),'YData',nidaqRaw(:,2));
 set(figData.lastplot470, 'Xdata',newData470(:,1),'YData',newData470(:,2));
-         if currentTrialType<=6
+
+       
 %% Compute new average trace
-allData=get(figData.photosubplot(currentTrialType), 'UserData');
+allData=get(figData.photosubplot(plotidx), 'UserData');
 dataSize=size(allData,2);
 allData(:,dataSize+1)=newData470(:,3);
-set(figData.photosubplot(currentTrialType), 'UserData', allData);
+set(figData.photosubplot(plotidx), 'UserData', allData);
 meanData=mean(allData,2);
 
-curSubplot=figData.photosubplot(currentTrialType);
-set(figData.meanplot(currentTrialType), 'Xdata',newData470(:,1),'YData',meanData,'LineWidth',MeanThickness);
+curSubplot=figData.photosubplot(plotidx);
+set(figData.meanplot(plotidx), 'Xdata',newData470(:,1),'YData',meanData,'LineWidth',MeanThickness);
 set(curSubplot,'NextPlot','add');
 plot(newData470(:,1),newData470(:,3),'-k','parent',curSubplot);
-uistack(figData.meanplot(currentTrialType), 'top');
+uistack(figData.meanplot(plotidx), 'top');
 hold off
-         end
+        
 %% Update GUI plot parameters
- for i=1:1
+ for i=1:3
      set(figData.photosubplot(i),'XLim',[minx maxx],'XTick',xtickvalues,'YLim',[miny maxy])
 end
 end
