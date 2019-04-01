@@ -22,9 +22,9 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.PlayStimulus = 1;
     TaskParameters.GUIMeta.PlayStimulus.Style = 'popupmenu';
     TaskParameters.GUIMeta.PlayStimulus.String = {'No stim.','Click stim.','Freq. stim.'};
-    TaskParameters.GUI.MinSampleTime = 0.05;
-    TaskParameters.GUI.MaxSampleTime = 0.5;
-    TaskParameters.GUI.AutoIncrSample = true;
+    TaskParameters.GUI.MinSampleTime = 0.2;
+    TaskParameters.GUI.MaxSampleTime = 0.2;
+    TaskParameters.GUI.AutoIncrSample = false;
     TaskParameters.GUIMeta.AutoIncrSample.Style = 'checkbox';
     TaskParameters.GUI.MinSampleIncr = 0.01;
     TaskParameters.GUI.MinSampleDecr = 0.005;
@@ -37,11 +37,11 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIPanels.Sampling = {'PlayStimulus','MinSampleTime','MaxSampleTime','AutoIncrSample','MinSampleIncr','MinSampleDecr','EarlyWithdrawalTimeOut','EarlyWithdrawalNoise','GracePeriod','SampleTime'};
     
     %Reward
-    TaskParameters.GUI.rewardAmount = 5;
+    TaskParameters.GUI.rewardAmount = 25;
     TaskParameters.GUI.CenterPortRewAmount = 0.5;
     TaskParameters.GUI.CenterPortProb = 1;
     TaskParameters.GUI.RewardProb = 1;
-    TaskParameters.GUI.Deplete = true;
+    TaskParameters.GUI.Deplete = false;
     TaskParameters.GUIMeta.Deplete.Style = 'checkbox';
     TaskParameters.GUI.DepleteRate = 0.8;
     TaskParameters.GUI.Jackpot = 1;
@@ -60,7 +60,7 @@ if isempty(fieldnames(TaskParameters))
     
     %% Photometry
     %photometry general
-    TaskParameters.GUI.Photometry=0;
+    TaskParameters.GUI.Photometry=1;
     TaskParameters.GUIMeta.Photometry.Style='checkbox';
     TaskParameters.GUI.DbleFibers=0;
     TaskParameters.GUIMeta.DbleFibers.Style='checkbox';
@@ -74,19 +74,19 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIPanels.PhotometryRecording={'Photometry','DbleFibers','Isobestic405','RedChannel'};
     
     %plot photometry
-    TaskParameters.GUI.TimeMin=-4;
-    TaskParameters.GUI.TimeMax=4;
+    TaskParameters.GUI.TimeMin=-1;
+    TaskParameters.GUI.TimeMax=15;
     TaskParameters.GUI.NidaqMin=-5;
     TaskParameters.GUI.NidaqMax=10;
     TaskParameters.GUI.SidePokeIn=1;
 	TaskParameters.GUIMeta.SidePokeIn.Style='checkbox';
     TaskParameters.GUI.SidePokeLeave=1;
 	TaskParameters.GUIMeta.SidePokeLeave.Style='checkbox';
-    TaskParameters.GUI.Reward=1;
-	TaskParameters.GUIMeta.Reward.Style='checkbox';    
+    TaskParameters.GUI.RewardDelivery=1;
+	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';    
      TaskParameters.GUI.BaselineBegin=0.1;
     TaskParameters.GUI.BaselineEnd=1.1;
-    TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','StateToZero','BaselineBegin','BaselineEnd'};
+    TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','SidePokeIn','SidePokeLeave','RewardDelivery','BaselineBegin','BaselineEnd'};
     
     %% Nidaq and Photometry
     TaskParameters.GUI.PhotometryVersion=1;
@@ -98,11 +98,11 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.DecimateFactor=610;
     TaskParameters.GUI.LED1_Name='Fiber1 470-A1';
     TaskParameters.GUIMeta.LED1_Name.Style='edittext';
-    TaskParameters.GUI.LED1_Amp=2;
+    TaskParameters.GUI.LED1_Amp=1;
     TaskParameters.GUI.LED1_Freq=211;
     TaskParameters.GUI.LED2_Name='Fiber1 405 / 565';
     TaskParameters.GUIMeta.LED2_Name.Style='edittext';
-    TaskParameters.GUI.LED2_Amp=2;
+    TaskParameters.GUI.LED2_Amp=5;
     TaskParameters.GUI.LED2_Freq=531;
     TaskParameters.GUI.LED1b_Name='Fiber2 470-mPFC';
     TaskParameters.GUIMeta.LED1b_Name.Style='edittext';
@@ -246,10 +246,10 @@ while RunSession
         if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
             Alignments{1} = 'wait_Sin';
         end
-        if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(1:iTrial) && BpodSystem.Data.Custom.Rewarded(1:iTrial)==0
+        if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) && BpodSystem.Data.Custom.Rewarded(iTrial)==0
             Alignments{2} = 'ITI';
         end
-        if TaskParameters.GUI.Reward && BpodSystem.Data.Custom.Rewarded(iTrial)==1
+        if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1
             Alignments{3} = 'water_';
         end
         
