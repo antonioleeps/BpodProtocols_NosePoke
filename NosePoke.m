@@ -577,22 +577,22 @@ if any(strcmp('lat_Go_signal',statesThisTrial))
 end
 
 % correct/error?
-BpodSystem.Data.Custom.Correct(iTrial) = NaN;
-if TaskParameters.GUI.LightGuided
-if BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
+BpodSystem.Data.Custom.Correct(iTrial) = true; %any choice is correct
+    if TaskParameters.GUI.LightGuided
+        if BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
+            BpodSystem.Data.Custom.Correct(iTrial) = true;
+        elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
+            BpodSystem.Data.Custom.Correct(iTrial) = true;
+        elseif BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
+            BpodSystem.Data.Custom.Correct(iTrial) = false;
+        elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
+            BpodSystem.Data.Custom.Correct(iTrial) = false;
+        end
+    else
     BpodSystem.Data.Custom.Correct(iTrial) = true;
-elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
-    BpodSystem.Data.Custom.Correct(iTrial) = true;
-elseif BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
-    BpodSystem.Data.Custom.Correct(iTrial) = false;
-elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
-    BpodSystem.Data.Custom.Correct(iTrial) = false;
-end
-else
-    if ~isnan(BpodSystem.Data.Custom.ChoiceLeft)
-        BpodSystem.Data.Custom.Correct(iTrial) = true;
     end
-end
+
+
 
 %% initialize next trial values
 BpodSystem.Data.Custom.ChoiceLeft(iTrial+1) = NaN;
