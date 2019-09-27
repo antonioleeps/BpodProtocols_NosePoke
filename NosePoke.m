@@ -612,13 +612,13 @@ end
 % correct/error?
 BpodSystem.Data.Custom.Correct(iTrial) = true; %any choice is correct
     if TaskParameters.GUI.LightGuided
-        if BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
+        if BpodSystem.Data.Custom.LightLeft(iTrial)==1 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
             BpodSystem.Data.Custom.Correct(iTrial) = true;
-        elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
+        elseif BpodSystem.Data.Custom.LightLeft(iTrial)==0 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
             BpodSystem.Data.Custom.Correct(iTrial) = true;
-        elseif BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
+        elseif BpodSystem.Data.Custom.LightLeft(iTrial)==1 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==0
             BpodSystem.Data.Custom.Correct(iTrial) = false;
-        elseif ~BpodSystem.Data.Custom.LightLeft(iTrial) && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
+        elseif BpodSystem.Data.Custom.LightLeft(iTrial)==0 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==1
             BpodSystem.Data.Custom.Correct(iTrial) = false;
         end
     else

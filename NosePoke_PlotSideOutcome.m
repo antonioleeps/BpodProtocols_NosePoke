@@ -18,6 +18,7 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.RewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','g', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.UnrewardedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.UnrewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.NoChoice =line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','w', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.SkippedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','w','MarkerFace','w', 'MarkerSize',4);
         BpodSystem.GUIHandles.OutcomePlot.SkippedR = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','w','MarkerFace','w', 'MarkerSize',4);
         BpodSystem.GUIHandles.OutcomePlot.EarlyWithdrawal = line(-1,0, 'LineStyle','none','Marker','d','MarkerEdge','none','MarkerFace','b', 'MarkerSize',6);
@@ -106,7 +107,12 @@ switch Action
             %plot if right correct was not rewarded
             ndxRwdR = ChoiceLeft(indxToPlot) == 0 & Correct(indxToPlot) == 1 & Rewarded(indxToPlot) == 0;
             Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
-            set(BpodSystem.GUIHandles.OutcomePlot.SkippedR, 'xdata', Xdata, 'ydata', Ydata);            
+            set(BpodSystem.GUIHandles.OutcomePlot.SkippedR, 'xdata', Xdata, 'ydata', Ydata);
+            %plot if no choice is made
+            ndxNoChoice=isnan(ChoiceLeft(indxToPlot));
+            Xdata=indxToPlot(ndxNoChoice); Ydata=0.5*ones(1,sum(ndxNoChoice));
+            set(BpodSystem.GUIHandles.OutcomePlot.NoChoice, 'xdata', Xdata, 'ydata', Ydata);
+            
         end
         if ~isempty(BpodSystem.Data.Custom.EarlyWithdrawal)
             indxToPlot = mn:CurrentTrial;
