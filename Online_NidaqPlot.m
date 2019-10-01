@@ -38,12 +38,12 @@ lastplot470=plot([-5 5],[0 0],'-g','LineWidth',MeanThickness);
 hold off
 
 %% Plot previous recordings
-subplotTitles={'all  choice','leave','reward'};
-for i=1:3
+subplotTitles={'all  choice','leave','reward', 'randomReward'};
+for i=1:4
     subplotTitles{i}=sprintf('%s',subplotTitles{i});
 end
 %Subplot
-for i=1:3
+for i=1:4
     photosubplot(i)=subplot(4,2,i+2);
     hold on
     title(subplotTitles(i));
@@ -93,7 +93,7 @@ uistack(figData.meanplot(plotidx), 'top');
 hold off
         
 %% Update GUI plot parameters
- for i=1:3
+ for i=1:4
      set(figData.photosubplot(i),'XLim',[minx maxx],'XTick',xtickvalues,'YLim',[miny maxy])
 end
 end

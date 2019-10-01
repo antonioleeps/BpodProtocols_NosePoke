@@ -9,7 +9,7 @@ global nidaq
 TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %general
-    TaskParameters.GUI.Ports_LMR = '123';
+    TaskParameters.GUI.Ports_LMR = '234';
     TaskParameters.GUI.FI = 0.5; % (s)
     TaskParameters.GUI.PreITI=1.5;
     TaskParameters.GUI.VI = false;
@@ -17,7 +17,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.DrinkingGrace=0.05;
     TaskParameters.GUIMeta.VI.Style = 'checkbox';
     TaskParameters.GUI.ChoiceDeadline = 10;
-    TaskParameters.GUI.LightGuided = 0;
+    TaskParameters.GUI.LightGuided = 1;
     TaskParameters.GUIMeta.LightGuided.Style = 'checkbox';
     TaskParameters.GUIPanels.General = {'Ports_LMR','FI','PreITI', 'VI', 'DrinkingTime'...
         'DrinkingGrace','ChoiceDeadline','LightGuided'};
@@ -95,10 +95,15 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.SidePokeLeave=1;
 	TaskParameters.GUIMeta.SidePokeLeave.Style='checkbox';
     TaskParameters.GUI.RewardDelivery=1;
-	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';    
-     TaskParameters.GUI.BaselineBegin=0.1;
-    TaskParameters.GUI.BaselineEnd=1.1;
-    TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','SidePokeIn','SidePokeLeave','RewardDelivery','BaselineBegin','BaselineEnd'};
+	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';
+    
+    TaskParameters.GUI.RandomReward=1;
+	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';
+    
+    TaskParameters.GUI.BaselineBegin=0.5;
+    TaskParameters.GUI.BaselineEnd=1.8;
+    TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','SidePokeIn','SidePokeLeave','RewardDelivery',...
+        'RandomReward', 'BaselineBegin','BaselineEnd'};
     
     %% Nidaq and Photometry
     TaskParameters.GUI.PhotometryVersion=1;
@@ -259,16 +264,21 @@ while RunSession
     % plot photometry data
     if TaskParameters.GUI.Photometry
             
-        Alignments = {[],[],[]};
+        Alignments = {[],[],[],[]};
         if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
             Alignments{1} = 'wait_Sin';
         end
         if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) && BpodSystem.Data.Custom.Rewarded(iTrial)==0
             Alignments{2} = 'ITI';
         end
-        if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1
+        if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==0
             Alignments{3} = 'water_';
         end
+        if TaskParameters.GUI.RewardDelivery &&  BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==1
+            Alignments{4} = 'RandomReward_water_';
+        end
+        
+        
         
         for k =1:length(Alignments)
              align = Alignments{k};
@@ -325,7 +335,7 @@ CenterPortOut = strcat('Port',num2str(CenterPort),'Out');
 RightPortOut = strcat('Port',num2str(RightPort),'Out');
 LeftPortIn = strcat('Port',num2str(LeftPort),'In');
 CenterPortIn = strcat('Port',num2str(CenterPort),'In');
-RightPortIn = strcat('Port',num2str(RightPort),'In');
+RightPortIn = strcat('Port', num2str(RightPort),'In');
 
 LeftValve = 2^(LeftPort-1);
 CenterValve = 2^(CenterPort-1);
@@ -336,9 +346,9 @@ if TaskParameters.GUI.RandomReward == true
     threshold = TaskParameters.GUI.RandomRewardProb;
     DummyProb=rand(1);
     if DummyProb<=threshold
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)= BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)*TaskParameters.GUI.RandomRewardMultiplier;
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)= BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)*TaskParameters.GUI.RandomRewardMultiplier;
     else
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,1);
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
     end
 end
 %%
@@ -400,14 +410,14 @@ RightWaitAction = 'ITI';
 LeftWaitAction = 'ITI';
 if BpodSystem.Data.Custom.RewardAvailable(iTrial)
     DelayTime = BpodSystem.Data.Custom.RewardDelay(iTrial);
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
+    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial) && DummyProb<=threshold
+        LeftWaitAction = 'RandomReward_water_L';
+    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.LightLeft(iTrial) && DummyProb<=threshold
+        RightWaitAction = 'RandomReward_water_R';
+    elseif TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
         LeftWaitAction = 'water_L';
     elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.LightLeft(iTrial)
         RightWaitAction = 'water_R';
-    elseif DummyProb<=threshold && BpodSystem.Data.Custom.LightLeft(iTrial)
-        LeftWaitAction = 'water_L_RandomReward';
-    elseif DummyProb<=threshold && ~BpodSystem.Data.Custom.LightLeft(iTrial)
-        RightWaitAction = 'water_R_RandomReward';
     else
         LeftWaitAction = 'water_L';
         RightWaitAction = 'water_R';
@@ -526,11 +536,11 @@ sma = AddState(sma, 'Name', 'water_R',...
     'OutputActions', {'ValveState', RightValve});
 
 
-sma = AddState(sma, 'Name', 'water_L_RandomReward',...
+sma = AddState(sma, 'Name', 'RandomReward_water_L',...
     'Timer', LeftValveTime,...
     'StateChangeConditions', {'Tup','DrinkingL'},...
     'OutputActions', {'ValveState', LeftValve});
-sma = AddState(sma, 'Name', 'water_R_RandomReward',...
+sma = AddState(sma, 'Name', 'RandomReward_water_R',...
     'Timer', RightValveTime,...
     'StateChangeConditions', {'Tup','DrinkingR'},...
     'OutputActions', {'ValveState', RightValve});
@@ -632,7 +642,7 @@ end
 
 
 
-if any(strncmp('water_L',statesThisTrial,7))
+if any(strncmp('water_L',statesThisTrial,7)) 
     BpodSystem.Data.Custom.Rewarded(iTrial) = true;
 elseif any(strncmp('water_R',statesThisTrial,7)) 
     BpodSystem.Data.Custom.Rewarded(iTrial) = true;
@@ -669,8 +679,9 @@ BpodSystem.Data.Custom.Correct(iTrial) = true; %any choice is correct
     end
 
 %what trials are randomly rewarded
-if any(strcmp('RandomReward',statesThisTrial))
+if any(strcmp('RandomReward_water_L',statesThisTrial)) || any(strcmp('RandomReward_water_R',statesThisTrial))
     BpodSystem.Data.Custom.RandomReward(iTrial)=true;
+    BpodSystem.Data.Custom.Rewarded(iTrial) = true;
 else
     BpodSystem.Data.Custom.RandomReward(iTrial)=false;
 end

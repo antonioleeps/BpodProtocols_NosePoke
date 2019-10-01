@@ -16,6 +16,9 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.CurrentTrialCross = line(-1,0.5, 'LineStyle','none','Marker','+','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.RewardedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','g', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.RewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','g', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.SurpriseR = line(-1,1, 'LineStyle','none','Marker','+','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
+        BpodSystem.GUIHandles.OutcomePlot.SurpriseL = line(-1,0, 'LineStyle','none','Marker','+','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
+        
         BpodSystem.GUIHandles.OutcomePlot.UnrewardedL = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.UnrewardedR = line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
         BpodSystem.GUIHandles.OutcomePlot.NoChoice =line(-1,0, 'LineStyle','none','Marker','o','MarkerEdge','r','MarkerFace','w', 'MarkerSize',6);
@@ -92,6 +95,17 @@ switch Action
             ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1;
             Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
             set(BpodSystem.GUIHandles.OutcomePlot.RewardedR, 'xdata', Xdata, 'ydata', Ydata);
+            
+            %Plot surprise Left
+            ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomReward(indxToPlot)==1;
+            Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
+            set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
+            
+            %Plot surprise Right
+            ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomReward(indxToPlot)==1;
+            Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
+            set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
+            
             %Plot error left
             ndxRwdL = ChoiceLeft(indxToPlot) == 1  & Correct(indxToPlot) == 0;
             Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
