@@ -47,7 +47,8 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.RewardProb = 1;
     TaskParameters.GUI.Deplete = false;
     TaskParameters.GUIMeta.Deplete.Style = 'checkbox';
-    TaskParameters.GUI.DepleteRate = 0.8;
+    TaskParameters.GUI.DepleteRateLeft = 0.8;
+    TaskParameters.GUI.DepleteRateRight = 0.8;
     TaskParameters.GUI.RandomReward = false;
     
     TaskParameters.GUIMeta.RandomReward.Style = 'checkbox';
@@ -61,7 +62,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.JackpotTime = 1;
     TaskParameters.GUIMeta.JackpotTime.Style = 'text';
     TaskParameters.GUIPanels.Reward = {'rewardAmount','CenterPortRewAmount','CenterPortProb','RewardProb',...
-        'Deplete','DepleteRate', 'RandomReward', 'RandomRewardProb', 'RandomRewardMultiplier',...
+        'Deplete','DepleteRateLeft','DepleteRateRight', 'RandomReward', 'RandomRewardProb', 'RandomRewardMultiplier',...
         'Jackpot','JackpotMin','JackpotTime'};
         
     %Reward Dealy
@@ -729,10 +730,10 @@ end
 
 %reward depletion
 if BpodSystem.Data.Custom.ChoiceLeft(iTrial) == 1 && TaskParameters.GUI.Deplete
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)*TaskParameters.GUI.DepleteRate;
+    BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)*TaskParameters.GUI.DepleteRateLeft;
     BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = TaskParameters.GUI.rewardAmount;
 elseif BpodSystem.Data.Custom.ChoiceLeft(iTrial) == 0 && TaskParameters.GUI.Deplete
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,2)*TaskParameters.GUI.DepleteRate;
+    BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,2)*TaskParameters.GUI.DepleteRateRight;
     BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = TaskParameters.GUI.rewardAmount;
 elseif isnan(BpodSystem.Data.Custom.ChoiceLeft(iTrial)) && TaskParameters.GUI.Deplete
     BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
