@@ -1,6 +1,7 @@
 function MouseNosePoke_PlotSideOutcome(AxesHandles, Action, varargin)
 global nTrialsToShow %this is for convenience
 global BpodSystem
+global TaskParameters
 
 switch Action
     case 'init'
@@ -96,15 +97,17 @@ switch Action
             Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
             set(BpodSystem.GUIHandles.OutcomePlot.RewardedR, 'xdata', Xdata, 'ydata', Ydata);
             
-            %Plot surprise Left
-            ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomReward(indxToPlot)==1;
-            Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
-            set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
-            
-            %Plot surprise Right
-            ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomReward(indxToPlot)==1;
-            Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
-            set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
+            if TaskParameters.GUI.RandomReward ==true
+                %Plot surprise Left
+                ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+                Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
+                set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
+
+                %Plot surprise Right
+                ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+                Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
+                set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
+            end
             
             %Plot error left
             ndxRwdL = ChoiceLeft(indxToPlot) == 1  & Correct(indxToPlot) == 0;
