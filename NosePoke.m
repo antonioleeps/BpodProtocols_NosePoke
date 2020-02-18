@@ -356,7 +356,7 @@ end
 
 LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
 if rand(1,1) <= TaskParameters.GUI.CenterPortProb && TaskParameters.GUI.Jackpot == 4
-    CenterValveTime  = GetValveTimes(BpodSystem.Data.Custom.CenterPortRewAmount(iTrial), CenterPort);
+    CenterValveTime  = min([0.1,max([0.001,GetValveTimes(BpodSystem.Data.Custom.CenterPortRewAmount(iTrial), CenterPort)])]);
 else
     CenterValveTime=0;
 end
@@ -500,8 +500,8 @@ elseif TaskParameters.GUI.Jackpot ==4 %
         'OutputActions', [StimStopOutput {'ValveState', CenterValve}]);
     sma = AddState(sma, 'Name', 'lat_Go_signal',...
         'Timer',0.001,...
-        'StateChangeConditions', {CenterPortOut,'wait_Sin'},...
-        'OutputActions',{strcat('PWM',num2str(LeftPort)),255,strcat('PWM',num2str(RightPort)),255});
+        'StateChangeConditions', {'Tup','wait_Sin'},...
+        'OutputActions',{strcat('PWM',num2str(LeftPort)),LeftLight,strcat('PWM',num2str(RightPort)),RightLight});
 end
 
 %%
