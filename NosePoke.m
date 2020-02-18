@@ -53,7 +53,7 @@ if isempty(fieldnames(TaskParameters))
     
     TaskParameters.GUIMeta.RandomReward.Style = 'checkbox';
     TaskParameters.GUI.RandomRewardProb = 0.1;
-    TaskParameters.GUI.RandomRewardMultiplier = 5;
+    TaskParameters.GUI.RandomRewardMultiplier = 1;
     
     TaskParameters.GUI.Jackpot = 1;
     TaskParameters.GUIMeta.Jackpot.Style = 'popupmenu';
@@ -98,13 +98,13 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.RewardDelivery=1;
 	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';
     
-    TaskParameters.GUI.RandomReward=1;
+    TaskParameters.GUI.RandomRewardDelivery=1;
 	TaskParameters.GUIMeta.RandomRewardDelivery.Style='checkbox';
     
     TaskParameters.GUI.BaselineBegin=0.5;
     TaskParameters.GUI.BaselineEnd=1.8;
     TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','SidePokeIn','SidePokeLeave','RewardDelivery',...
-        'RandomReward', 'BaselineBegin','BaselineEnd'};
+        'RandomRewardDelivery', 'BaselineBegin','BaselineEnd'};
     
     %% Nidaq and Photometry
     TaskParameters.GUI.PhotometryVersion=1;
@@ -154,7 +154,7 @@ BpodSystem.Data.Custom.SampleTime(1) = TaskParameters.GUI.MinSampleTime;
 BpodSystem.Data.Custom.EarlyWithdrawal(1) = false;
 BpodSystem.Data.Custom.Jackpot(1) = false;
 
-BpodSystem.Data.Custom.RandomReward=false;
+BpodSystem.Data.Custom.RandomReward=TaskParameters.GUI.RandomReward;
 BpodSystem.Data.Custom.RandomThresholdPassed(1)=0;
 BpodSystem.Data.Custom.RandomRewardProb=TaskParameters.GUI.RandomRewardProb;
 BpodSystem.Data.Custom.RandomRewardAmount=TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
@@ -499,7 +499,7 @@ elseif TaskParameters.GUI.Jackpot ==4 %
         'StateChangeConditions', {'Tup','lat_Go_signal'},...
         'OutputActions', [StimStopOutput {'ValveState', CenterValve}]);
     sma = AddState(sma, 'Name', 'lat_Go_signal',...
-        'Timer',0,...
+        'Timer',0.001,...
         'StateChangeConditions', {CenterPortOut,'wait_Sin'},...
         'OutputActions',{strcat('PWM',num2str(LeftPort)),255,strcat('PWM',num2str(RightPort)),255});
 end
