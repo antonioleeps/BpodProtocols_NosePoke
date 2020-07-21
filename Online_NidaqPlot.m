@@ -38,7 +38,7 @@ lastplot470=plot([-5 5],[0 0],'-g','LineWidth',MeanThickness);
 hold off
 
 %% Plot previous recordings
-subplotTitles={'all  choice','leave','reward', 'randomReward'};
+subplotTitles={'all  choice','leave','reward'};
 for i=1:4
     subplotTitles{i}=sprintf('%s',subplotTitles{i});
 end

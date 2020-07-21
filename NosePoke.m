@@ -49,11 +49,15 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.Deplete.Style = 'checkbox';
     TaskParameters.GUI.DepleteRateLeft = 0.8;
     TaskParameters.GUI.DepleteRateRight = 0.8;
-    TaskParameters.GUI.RandomReward = false;
-    
-    TaskParameters.GUIMeta.RandomReward.Style = 'checkbox';
-    TaskParameters.GUI.RandomRewardProb = 0.1;
-    TaskParameters.GUI.RandomRewardMultiplier = 1;
+    TaskParameters.GUI.NoisyReward = false;
+    TaskParameters.GUIMeta.NoisyReward.Style='checkbox';
+    TaskParameters.GUI.NoiseLeft = 1;
+    TaskParameters.GUI.NoiseRight = 1;
+%     TaskParameters.GUI.RandomReward = false;
+%     
+%     TaskParameters.GUIMeta.RandomReward.Style = 'checkbox';
+%     TaskParameters.GUI.RandomRewardProb = 0.1;
+%     TaskParameters.GUI.RandomRewardMultiplier = 1;
     
     TaskParameters.GUI.Jackpot = 1;
     TaskParameters.GUIMeta.Jackpot.Style = 'popupmenu';
@@ -62,7 +66,8 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.JackpotTime = 1;
     TaskParameters.GUIMeta.JackpotTime.Style = 'text';
     TaskParameters.GUIPanels.Reward = {'rewardAmount','CenterPortRewAmount','CenterPortProb','RewardProb',...
-        'Deplete','DepleteRateLeft','DepleteRateRight', 'RandomReward', 'RandomRewardProb', 'RandomRewardMultiplier',...
+        'Deplete','DepleteRateLeft','DepleteRateRight',...
+        'NoisyReward', 'NoiseLeft','NoiseRight',...
         'Jackpot','JackpotMin','JackpotTime'};
         
     %Reward Dealy
@@ -98,13 +103,13 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.RewardDelivery=1;
 	TaskParameters.GUIMeta.RewardDelivery.Style='checkbox';
     
-    TaskParameters.GUI.RandomRewardDelivery=1;
-	TaskParameters.GUIMeta.RandomRewardDelivery.Style='checkbox';
+%   TaskParameters.GUI.RandomRewardDelivery=1;
+%  	TaskParameters.GUIMeta.RandomRewardDelivery.Style='checkbox';
     
     TaskParameters.GUI.BaselineBegin=0.5;
     TaskParameters.GUI.BaselineEnd=1.8;
     TaskParameters.GUIPanels.PhotometryPlot={'TimeMin','TimeMax','NidaqMin','NidaqMax','SidePokeIn','SidePokeLeave','RewardDelivery',...
-        'RandomRewardDelivery', 'BaselineBegin','BaselineEnd'};
+         'BaselineBegin','BaselineEnd'};
     
     %% Nidaq and Photometry
     TaskParameters.GUI.PhotometryVersion=1;
@@ -154,10 +159,10 @@ BpodSystem.Data.Custom.SampleTime(1) = TaskParameters.GUI.MinSampleTime;
 BpodSystem.Data.Custom.EarlyWithdrawal(1) = false;
 BpodSystem.Data.Custom.Jackpot(1) = false;
 
-BpodSystem.Data.Custom.RandomReward=TaskParameters.GUI.RandomReward;
-BpodSystem.Data.Custom.RandomThresholdPassed(1)=0;
-BpodSystem.Data.Custom.RandomRewardProb=TaskParameters.GUI.RandomRewardProb;
-BpodSystem.Data.Custom.RandomRewardAmount=TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+% BpodSystem.Data.Custom.RandomReward=TaskParameters.GUI.RandomReward;
+% BpodSystem.Data.Custom.RandomThresholdPassed(1)=0;
+% BpodSystem.Data.Custom.RandomRewardProb=TaskParameters.GUI.RandomRewardProb;
+% BpodSystem.Data.Custom.RandomRewardAmount=TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
 
 BpodSystem.Data.Custom.RewardMagnitude = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
 BpodSystem.Data.Custom.CenterPortRewAmount =TaskParameters.GUI.CenterPortRewAmount;
@@ -266,19 +271,19 @@ while RunSession
     % plot photometry data
     if TaskParameters.GUI.Photometry
             
-        Alignments = {[],[],[],[]};
+        Alignments = {[],[],[]};
         if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
             Alignments{1} = 'wait_Sin';
         end
+        
         if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) && BpodSystem.Data.Custom.Rewarded(iTrial)==0
             Alignments{2} = 'ITI';
         end
-        if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==0
+        
+        if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1
             Alignments{3} = 'water_';
         end
-        if TaskParameters.GUI.RewardDelivery &&  BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==1
-            Alignments{4} = 'RandomReward_water_';
-        end
+
         
         
         
@@ -343,15 +348,26 @@ LeftValve = 2^(LeftPort-1);
 CenterValve = 2^(CenterPort-1);
 RightValve = 2^(RightPort-1);
 
-%% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
-
-if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.RandomThresholdPassed(iTrial)==1
-    surpriseRewardAmount=TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)= [TaskParameters.GUI.rewardAmount, TaskParameters.GUI.rewardAmount]+surpriseRewardAmount;
-else
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
-    
+if TaskParameters.GUI.NoisyReward
+    if TaskParameters.GUI.NoisyReward==True
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=normrnd(BpodSystem.Data.Custom.RewardMagnitude(iTrial,:),[TaskParameters.GUI.NoiseLeft, TaskParameters.GUI.NoiseRight]);
+    elseif TaskParameters.GUI.NoisyReward==False
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+    else
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+    end
 end
+
+
+% %% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
+% 
+% if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.RandomThresholdPassed(iTrial)==1
+%     surpriseRewardAmount=TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
+%     BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)= [TaskParameters.GUI.rewardAmount, TaskParameters.GUI.rewardAmount]+surpriseRewardAmount;
+% else
+%     BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+%     
+% end
 %%
 
 LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
@@ -410,18 +426,7 @@ end
 RightWaitAction = 'ITI';
 LeftWaitAction = 'ITI';
 
-if BpodSystem.Data.Custom.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==true
-    DelayTime = BpodSystem.Data.Custom.RewardDelay(iTrial);
-    %dummy state added for plotting
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
-        LeftWaitAction = 'RandomReward_water_L';
-    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.LightLeft(iTrial)
-        RightWaitAction = 'RandomReward_water_R';
-    else
-        LeftWaitAction = 'water_L';
-        RightWaitAction = 'water_R';
-    end 
-elseif BpodSystem.Data.Custom.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==false
+if BpodSystem.Data.Custom.RewardAvailable(iTrial)
     DelayTime = BpodSystem.Data.Custom.RewardDelay(iTrial);
     if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
         LeftWaitAction = 'water_L';
@@ -537,14 +542,14 @@ sma = AddState(sma, 'Name', 'wait_R_grace',...
 %% water rewards and grace period for drinking
 
 %dummy states for photometry alignment
-sma = AddState(sma, 'Name', 'RandomReward_water_L',...
-    'Timer', 0,...
-    'StateChangeConditions', {'Tup','water_L'},...
-    'OutputActions', {});
-sma = AddState(sma, 'Name', 'RandomReward_water_R',...
-    'Timer', 0,...
-    'StateChangeConditions', {'Tup','water_R'},...
-    'OutputActions', {});
+% sma = AddState(sma, 'Name', 'RandomReward_water_L',...
+%     'Timer', 0,...
+%     'StateChangeConditions', {'Tup','water_L'},...
+%     'OutputActions', {});
+% sma = AddState(sma, 'Name', 'RandomReward_water_R',...
+%     'Timer', 0,...
+%     'StateChangeConditions', {'Tup','water_R'},...
+%     'OutputActions', {});
 
 sma = AddState(sma, 'Name', 'water_L',...
     'Timer', LeftValveTime,...
@@ -745,23 +750,23 @@ end
 %right choices 25 - 20 -16- 12.8 - 10.24 -8.192 - 5.2429 - 37.5 - 4.194
 
 if TaskParameters.GUI.Deplete
-    if BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)>[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount]
-        if length(BpodSystem.Data.Custom.ChoiceLeft)>1 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==BpodSystem.Data.Custom.ChoiceLeft(iTrial-1)
-            DummyRewardMag=BpodSystem.Data.Custom.RewardMagnitude(iTrial-1,:);
-        else
-            DummyRewardMag=[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
-        end
-        
-    else
-        DummyRewardMag=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
-    end
+%     if BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)>[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount]
+%         if length(BpodSystem.Data.Custom.ChoiceLeft)>1 && BpodSystem.Data.Custom.ChoiceLeft(iTrial)==BpodSystem.Data.Custom.ChoiceLeft(iTrial-1)
+%             DummyRewardMag=BpodSystem.Data.Custom.RewardMagnitude(iTrial-1,:);
+%         else
+%             DummyRewardMag=[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+%         end
+%         
+%     else
+%         DummyRewardMag=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+%     end
 
-
-    if  BpodSystem.Data.Custom.ChoiceLeft(iTrial) == 1 && TaskParameters.GUI.Deplete
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = DummyRewardMag(1,1)*TaskParameters.GUI.DepleteRateLeft;
+    %reward depletion
+    if BpodSystem.Data.Custom.ChoiceLeft(iTrial) == 1 && TaskParameters.GUI.Deplete
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,1)*TaskParameters.GUI.DepleteRateLeft;
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = TaskParameters.GUI.rewardAmount;
     elseif BpodSystem.Data.Custom.ChoiceLeft(iTrial) == 0 && TaskParameters.GUI.Deplete
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = DummyRewardMag(1,2)*TaskParameters.GUI.DepleteRateRight;
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,2)*TaskParameters.GUI.DepleteRateRight;
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = TaskParameters.GUI.rewardAmount;
     elseif isnan(BpodSystem.Data.Custom.ChoiceLeft(iTrial)) && TaskParameters.GUI.Deplete
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
