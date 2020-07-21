@@ -9,7 +9,7 @@ global nidaq
 TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %general
-    TaskParameters.GUI.Ports_LMR = '234';
+    TaskParameters.GUI.Ports_LMR = '123';
     TaskParameters.GUI.FI = 0.5; % (s)
     TaskParameters.GUI.PreITI=1.5;
     TaskParameters.GUI.VI = false;
@@ -53,6 +53,8 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.NoisyReward.Style='checkbox';
     TaskParameters.GUI.NoiseLeft = 1;
     TaskParameters.GUI.NoiseRight = 1;
+    TaskParameters.GUI.H20Min = 1;
+    TaskParameters.GUI.H20Max = 50;
 %     TaskParameters.GUI.RandomReward = false;
 %     
 %     TaskParameters.GUIMeta.RandomReward.Style = 'checkbox';
@@ -67,7 +69,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.JackpotTime.Style = 'text';
     TaskParameters.GUIPanels.Reward = {'rewardAmount','CenterPortRewAmount','CenterPortProb','RewardProb',...
         'Deplete','DepleteRateLeft','DepleteRateRight',...
-        'NoisyReward', 'NoiseLeft','NoiseRight',...
+        'NoisyReward', 'NoiseLeft','NoiseRight', 'H20Min','H20Max'...
         'Jackpot','JackpotMin','JackpotTime'};
         
     %Reward Dealy
@@ -206,6 +208,7 @@ BpodSystem.GUIHandles.OutcomePlot.HandleGracePeriod = axes('Position',  [1*.05  
 BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate = axes('Position',    [3*.05 + 2*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleST = axes('Position',           [5*.05 + 4*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleMT = axes('Position',           [6*.05 + 6*.08   .6  .1  .3], 'Visible', 'off');
+
 NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'init');
 
 %% NIDAQ Initialization and Plots
@@ -348,15 +351,8 @@ LeftValve = 2^(LeftPort-1);
 CenterValve = 2^(CenterPort-1);
 RightValve = 2^(RightPort-1);
 
-if TaskParameters.GUI.NoisyReward
-    if TaskParameters.GUI.NoisyReward==True
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=normrnd(BpodSystem.Data.Custom.RewardMagnitude(iTrial,:),[TaskParameters.GUI.NoiseLeft, TaskParameters.GUI.NoiseRight]);
-    elseif TaskParameters.GUI.NoisyReward==False
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
-    else
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
-    end
-end
+
+
 
 
 % %% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
@@ -717,7 +713,7 @@ BpodSystem.Data.Custom.LightLeft(iTrial+1) = rand(1,1)<0.5;
 
 BpodSystem.Data.Custom.RewardAvailable(iTrial+1) = rand(1,1)<TaskParameters.GUI.RewardProb;
 BpodSystem.Data.Custom.RewardDelay(iTrial+1) = abs( randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean);
-BpodSystem.Data.Custom.RandomThresholdPassed(iTrial+1)=rand(1)<TaskParameters.GUI.RandomRewardProb;
+%BpodSystem.Data.Custom.RandomThresholdPassed(iTrial+1)=rand(1)<TaskParameters.GUI.RandomRewardProb;
 
 %stimuli
 if ~BpodSystem.EmulatorMode
@@ -769,10 +765,18 @@ if TaskParameters.GUI.Deplete
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,2) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,2)*TaskParameters.GUI.DepleteRateRight;
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = TaskParameters.GUI.rewardAmount;
     elseif isnan(BpodSystem.Data.Custom.ChoiceLeft(iTrial)) && TaskParameters.GUI.Deplete
-        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);    
     else
         BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
     end
+end
+
+if TaskParameters.GUI.NoisyReward
+      BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:)=round(normrnd(BpodSystem.Data.Custom.RewardMagnitude(iTrial,:),[TaskParameters.GUI.NoiseLeft, TaskParameters.GUI.NoiseRight]));
+      
+      while sum(BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:)<TaskParameters.GUI.H20Min)>0 || sum(BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)>TaskParameters.GUI.H20Max)>0
+        BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:)=round(normrnd(BpodSystem.Data.Custom.RewardMagnitude(iTrial,:),[TaskParameters.GUI.NoiseLeft, TaskParameters.GUI.NoiseRight]));
+      end  
 end
 %center port reward amount
 BpodSystem.Data.Custom.CenterPortRewAmount(iTrial+1) =TaskParameters.GUI.CenterPortRewAmount;

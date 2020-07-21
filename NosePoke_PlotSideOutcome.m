@@ -57,6 +57,7 @@ switch Action
         AxesHandles.HandleMT.YLabel.String = 'trial counts';
         AxesHandles.HandleMT.Title.String = 'Movement time';
         
+        
     case 'update'
         
         CurrentTrial = varargin{1};
@@ -96,18 +97,18 @@ switch Action
             ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1;
             Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
             set(BpodSystem.GUIHandles.OutcomePlot.RewardedR, 'xdata', Xdata, 'ydata', Ydata);
-            
-            if TaskParameters.GUI.RandomReward ==true
-                %Plot surprise Left
-                ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
-                Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
-                set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
-
-                %Plot surprise Right
-                ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
-                Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
-                set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
-            end
+%             
+%             if TaskParameters.GUI.RandomReward ==true
+%                 %Plot surprise Left
+%                 ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+%                 Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
+%                 set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
+% 
+%                 %Plot surprise Right
+%                 ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+%                 Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
+%                 set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
+%             end
             
             %Plot error left
             ndxRwdL = ChoiceLeft(indxToPlot) == 1  & Correct(indxToPlot) == 0;
@@ -196,6 +197,9 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HistMT.EdgeColor = 'none';
         LeftBias = sum(BpodSystem.Data.Custom.ChoiceLeft==1)/sum(~isnan(BpodSystem.Data.Custom.ChoiceLeft),2);
         cornertext(AxesHandles.HandleMT,sprintf('Bias=%1.2f',LeftBias))
+        
+        
+        
 
 end
 
