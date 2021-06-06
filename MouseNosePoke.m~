@@ -32,10 +32,9 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.SampleTime.Style = 'text';
     TaskParameters.GUIPanels.Sampling = {'PlayStimulus','MinSampleTime','MaxSampleTime','AutoIncrSample','MinSampleIncr','MinSampleDecr','EarlyWithdrawalTimeOut','EarlyWithdrawalNoise','GracePeriod','SampleTime'};
     %Reward
-    TaskParameters.GUI.rewardAmount = 35;
-    TaskParameters.GUI.CenterPortRewAmount = 8;
+    TaskParameters.GUI.rewardAmount = 5;
+    TaskParameters.GUI.CenterPortRewAmount = 0.5;
     TaskParameters.GUI.CenterPortProb = 1;
-    TaskParameters.GUI.FirstActionReward =10;
     TaskParameters.GUI.Deplete = true;
     TaskParameters.GUIMeta.Deplete.Style = 'checkbox';
     TaskParameters.GUI.DepleteRate = 0.8;
@@ -149,8 +148,8 @@ else
 end
 RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,2), RightPort);
 
-InitValveTime_Left = GetValveTimes(TaskParameters.GUI.FirstActionReward, LeftPort);
-InitValveTime_Right = GetValveTimes(TaskParameters.GUI.FirstActionReward, RightPort);
+InitValveTime_Left = GetValveTimes(BpodSystem.Data.Custom.FirstActionReward, LeftPort);
+InitValveTime_Right = GetValveTimes(BpodSystem.Data.Custom.FirstActionReward, RightPort);
 
 % Control that valve time has not a negative value:
 if LeftValveTime<0; LeftValveTime=0; end 
