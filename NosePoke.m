@@ -45,9 +45,18 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.JackpotMin = 1;
     TaskParameters.GUI.JackpotTime = 1;
     TaskParameters.GUIMeta.JackpotTime.Style = 'text';
-        TaskParameters.GUIPanels.Reward = {'rewardAmount','CenterPortRewAmount','CenterPortProb','Deplete','DepleteRate','Jackpot','JackpotMin','JackpotTime'};
+        TaskParameters.GUIPanels.Reward = {'rewardAmount','CenterPortRewAmount','CenterPortProb','FirstActionReward','Deplete','DepleteRate','Jackpot','JackpotMin','JackpotTime'};
     TaskParameters.GUI = orderfields(TaskParameters.GUI);
     TaskParameters.Figures.OutcomePlot.Position = [200, 200, 1000, 400];
+    
+    
+    %Reward Dealy
+    TaskParameters.GUI.DelayMean = 0;
+    TaskParameters.GUI.DelaySigma=0;
+    TaskParameters.GUI.DelayGracePeriod=0;
+    TaskParameters.GUIPanels.RewardDelay = {'DelayMean','DelaySigma','DelayGracePeriod'};
+    
+    
 end
 BpodParameterGUI('init', TaskParameters);
 
@@ -61,7 +70,9 @@ BpodSystem.Data.Custom.CenterPortRewAmount =TaskParameters.GUI.CenterPortRewAmou
 BpodSystem.Data.Custom.Rewarded = false;
 BpodSystem.Data.Custom.CenterPortRewarded = false;
 BpodSystem.Data.Custom.GracePeriod = 0;
+BpodSystem.Data.Custom.RewardDelay = randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean;
 BpodSystem.Data.Custom = orderfields(BpodSystem.Data.Custom);
+
 %server data
 [~,BpodSystem.Data.Custom.Rig] = system('hostname');
 [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
@@ -185,7 +196,13 @@ else
     PunishSoundAction=0;
 end
     
-    
+DelayTime=BpodSystem.Data.Custom.RewardDelay(iTrial);
+
+LeftLight=255;
+RightLight=255;
+LeftWaitAction = 'water_L';
+RightWaitAction = 'water_R';
+
 sma = NewStateMatrix();
 sma = SetGlobalTimer(sma,1,TaskParameters.GUI.SampleTime);
 
@@ -272,11 +289,10 @@ sma = AddState(sma, 'Name', 'wait_L_grace',...
     'StateChangeConditions', {RightPortIn, RightWaitAction, 'GlobalTimer3_End', 'ITI'},...
     'OutputActions',{strcat('PWM',num2str(LeftPort)),LeftLight,strcat('PWM',num2str(RightPort)),RightLight});
 
-
 sma = AddState(sma, 'Name', 'wait_R_start',...
     'Timer',InitValveTime_Right,...
-    'StateChangeConditions', {'Tup','wait_R', 'ValveState', RightValve, 'GlobalTimer3_End', 'ITI', RightPortOut,'wait_R_grace'},...
-    'OutputActions',{'GlobalTimerTrig',2});
+    'StateChangeConditions', {'Tup','wait_R','GlobalTimer3_End', 'ITI', RightPortOut,'wait_R_grace'},...
+    'OutputActions',{'GlobalTimerTrig',2, 'ValveState', RightValve, strcat('PWM',num2str(LeftPort)),LeftLight,strcat('PWM',num2str(RightPort)),RightLight});
 
 sma = AddState(sma, 'Name', 'wait_R',...
     'Timer',DelayTime,...
@@ -393,6 +409,8 @@ BpodSystem.Data.Custom.MT(iTrial+1) = NaN;
 BpodSystem.Data.Custom.Rewarded(iTrial+1) = false;
 BpodSystem.Data.Custom.CenterPortRewarded(iTrial+1) = false;
 BpodSystem.Data.Custom.GracePeriod(1:50,iTrial+1) = NaN(50,1);
+BpodSystem.Data.Custom.RewardDelay(iTrial+1) = randn(1,1)*TaskParameters.GUI.DelaySigma+TaskParameters.GUI.DelayMean;
+
 
 %stimuli
 if ~BpodSystem.EmulatorMode
