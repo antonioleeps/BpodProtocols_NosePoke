@@ -55,6 +55,8 @@ iTrial = 1;
 
 while RunSession
     TaskParameters = BpodParameterGUI('sync', TaskParameters);
+    NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.SideOutcomePlot,'update',iTrial);
+
     InitiatePsychtoolbox();
     
     sma = StateMatrix(iTrial);
@@ -70,7 +72,7 @@ while RunSession
     end
     
     UpdateCustomDataFields(iTrial);
-    NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.SideOutcomePlot,'update',iTrial);
+
     iTrial = iTrial + 1;
     
 end  % Main loop
