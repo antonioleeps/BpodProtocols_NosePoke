@@ -79,7 +79,7 @@ BpodSystem.Data.Custom.RewardDelay = randn(1,1)*TaskParameters.GUI.DelaySigma+Ta
 BpodSystem.Data.Custom = orderfields(BpodSystem.Data.Custom);
 %server data
 [~,BpodSystem.Data.Custom.Rig] = system('hostname');
-[~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
+[~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.Path.CurrentDataFile))));
 BpodSystem.Data.Custom.PsychtoolboxStartup=false;
 BpodSystem.Data.Custom.MaxSampleTime = 1; %only relevant for max stimulus length
 [BpodSystem.Data.Custom.RightClickTrain,BpodSystem.Data.Custom.LeftClickTrain] = getClickStimulus(BpodSystem.Data.Custom.MaxSampleTime);
@@ -87,21 +87,21 @@ BpodSystem.Data.Custom.FreqStimulus = getFreqStimulus(BpodSystem.Data.Custom.Max
 
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 
-%% Configuring PulsePal
-load PulsePalParamStimulus.mat
-load PulsePalParamFeedback.mat
-BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
-BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
-clear PulsePalParamFeedback PulsePalParamStimulus
-if ~BpodSystem.EmulatorMode
-    ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
-    SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain, ones(1,length(BpodSystem.Data.Custom.RightClickTrain))*5);
-    SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain))*5); 
-    if TaskParameters.GUI.PlayStimulus == 3
-        InitiatePsychtoolbox();
-        PsychToolboxSoundServer('Load', 1, BpodSystem.Data.Custom.FreqStimulus);
-    end
-end
+% %% Configuring PulsePal
+% load PulsePalParamStimulus.mat
+% load PulsePalParamFeedback.mat
+% BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
+% BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
+% clear PulsePalParamFeedback PulsePalParamStimulus
+% if ~BpodSystem.EmulatorMode
+%     ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
+%     SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain, ones(1,length(BpodSystem.Data.Custom.RightClickTrain))*5);
+%     SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain))*5); 
+%     if TaskParameters.GUI.PlayStimulus == 3
+%         InitiatePsychtoolbox();
+%         PsychToolboxSoundServer('Load', 1, BpodSystem.Data.Custom.FreqStimulus);
+%     end
+% end
 
 %% Initialize plots
 BpodSystem.ProtocolFigures.SideOutcomePlotFig = figure('Position', TaskParameters.Figures.OutcomePlot.Position,'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
@@ -128,7 +128,7 @@ while RunSession
         SaveBpodSessionData;
     end
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
-    if BpodSystem.BeingUsed == 0
+    if BpodSystem.Status.BeingUsed == 0
         return
     end
     
