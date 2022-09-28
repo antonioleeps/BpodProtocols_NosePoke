@@ -33,7 +33,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.MinSampleIncr = 0.01;
     TaskParameters.GUI.MinSampleDecr = 0.005;
     TaskParameters.GUI.EarlyWithdrawalTimeOut = 3;
-    TaskParameters.GUI.EarlyWithdrawalNoise = false;
+    TaskParameters.GUI.EarlyWithdrawalNoise = true;
     TaskParameters.GUIMeta.EarlyWithdrawalNoise.Style='checkbox';
     TaskParameters.GUI.GracePeriod = 0;
     TaskParameters.GUI.SampleTime = TaskParameters.GUI.MinSampleTime;

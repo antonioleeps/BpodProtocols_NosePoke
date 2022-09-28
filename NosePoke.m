@@ -9,23 +9,32 @@ TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
 
 InitializeCustomDataFields(); % Initialize data (trial type) vectors and first values
 
+% ------------------------Setup Stimuli--------------------------------%
+[Player, fs] = SetupWavePlayer();
+PunishSound = rand(1, fs*.5)*2 - 1;  % white noise
+SoundIndex=1;
+Player.loadWaveform(SoundIndex, PunishSound);
+SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
+LoadSoundMessages(SoundChannels);
+% ---------------------------------------------------------------------%
+
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 
-%% Configuring PulsePal
-load PulsePalParamStimulus.mat
-load PulsePalParamFeedback.mat
-BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
-BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
-clear PulsePalParamFeedback PulsePalParamStimulus
-if ~BpodSystem.EmulatorMode
+% Configuring PulsePal
+% load PulsePalParamStimulus.mat
+% load PulsePalParamFeedback.mat
+% BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
+% BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
+% clear PulsePalParamFeedback PulsePalParamStimulus
+% if ~BpodSystem.EmulatorMode
 %     ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
 %     SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain, ones(1,length(BpodSystem.Data.Custom.RightClickTrain))*5);
 %     SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain))*5); 
-    if TaskParameters.GUI.PlayStimulus == 3
-        InitiatePsychtoolbox();
-        PsychToolboxSoundServer('Load', 1, BpodSystem.Data.Custom.FreqStimulus);
-    end
-end
+%     if TaskParameters.GUI.PlayStimulus == 3
+%         InitiatePsychtoolbox();
+%         PsychToolboxSoundServer('Load', 1, BpodSystem.Data.Custom.FreqStimulus);
+%     end
+% end
 
 InitializePlots();
 
@@ -33,7 +42,7 @@ if TaskParameters.GUI.Photometry
     [FigNidaq1,FigNidaq2]=InitializeNidaq();
 end
 
-%% --------------------------Main loop------------------------------ %%
+% --------------------------Main loop------------------------------ %
 RunSession = true;
 iTrial = 1;
 
@@ -44,15 +53,15 @@ while RunSession
     sma = StateMatrix(iTrial);
     SendStateMatrix(sma);
     
-    %% NIDAQ Get nidaq ready to start
+    % NIDAQ Get nidaq ready to start
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('WaitToStart');
     end
     
-    %% Run Trial
+    % Run Trial
     RawEvents = RunStateMatrix;
     
-    %% NIDAQ Stop acquisition and save data in bpod structure
+    % NIDAQ Stop acquisition and save data in bpod structure
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
         [PhotoData,Photo2Data]=Nidaq_photometry('Save');
@@ -63,10 +72,10 @@ while RunSession
         PlotPhotometryData(FigNidaq1, FigNidaq2, PhotoData, Photo2Data);
     end
     
-    %% Bpod save
+    % Bpod save
     if ~isempty(fieldnames(RawEvents))
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents);
-        SaveBpodSessionData;
+        SaveBpodSessionData();
     end
 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
@@ -75,10 +84,10 @@ while RunSession
         return
     end
     
-    %% update fields
+    % update fields
     UpdateCustomDataFields(iTrial)
     
-    %% update figures
+    % update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
 
     iTrial = iTrial + 1;    

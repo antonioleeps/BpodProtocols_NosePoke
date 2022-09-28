@@ -1,6 +1,8 @@
 function sma = StateMatrix(iTrial)
+
 global BpodSystem
 global TaskParameters
+
 % Define ports
 LeftPort = floor(mod(TaskParameters.GUI.Ports_LMR/100,10));
 CenterPort = floor(mod(TaskParameters.GUI.Ports_LMR/10,10));
@@ -16,7 +18,7 @@ LeftValve = 2^(LeftPort-1);
 CenterValve = 2^(CenterPort-1);
 RightValve = 2^(RightPort-1);
 
-%% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
+% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
 
 if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.RandomThresholdPassed(iTrial)==1
     surpriseRewardAmount=TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
@@ -25,7 +27,6 @@ else
     BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
     
 end
-%%
 
 LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
 if rand(1,1) <= TaskParameters.GUI.CenterPortProb && TaskParameters.GUI.Jackpot == 4
@@ -58,9 +59,9 @@ elseif TaskParameters.GUI.PlayStimulus == 3 %freq
 end
 
 if TaskParameters.GUI.EarlyWithdrawalNoise
-    PunishSoundAction=11;
+    PunishSoundIndex=1;
 else
-    PunishSoundAction=0;
+    PunishSoundIndex=0;
 end
 
 %light guided task
@@ -263,7 +264,8 @@ sma = AddState(sma, 'Name', 'water_RJackpot',...
 sma = AddState(sma, 'Name', 'EarlyWithdrawal',...
     'Timer', TaskParameters.GUI.EarlyWithdrawalTimeOut,...
     'StateChangeConditions', {'Tup','ITI'},...
-    'OutputActions', {'SoftCode',PunishSoundAction});
+    'OutputActions', {'WavePlayer1',PunishSoundIndex});
+%     'OutputActions', {'SoftCode',PunishSoundAction});
 if TaskParameters.GUI.VI
     sma = AddState(sma, 'Name', 'ITI',...
         'Timer',exprnd(TaskParameters.GUI.FI),...
