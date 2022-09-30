@@ -20,29 +20,29 @@ RightValve = 2^(RightPort-1);
 
 % random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
 
-if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.RandomThresholdPassed(iTrial)==1
+if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.TrialData.RandomThresholdPassed(iTrial)==1
     surpriseRewardAmount=TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)= [TaskParameters.GUI.rewardAmount, TaskParameters.GUI.rewardAmount]+surpriseRewardAmount;
+    BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:)= [TaskParameters.GUI.rewardAmount, TaskParameters.GUI.rewardAmount]+surpriseRewardAmount;
 else
-    BpodSystem.Data.Custom.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.RewardMagnitude(iTrial,:);
+    BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:);
     
 end
 
-LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
+LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,1), LeftPort);
 if rand(1,1) <= TaskParameters.GUI.CenterPortProb && TaskParameters.GUI.Jackpot == 4
-    CenterValveTime  = min([0.1,max([0.001,GetValveTimes(BpodSystem.Data.Custom.CenterPortRewAmount(iTrial), CenterPort)])]);
+    CenterValveTime  = min([0.1,max([0.001,GetValveTimes(BpodSystem.Data.Custom.TrialData.CenterPortRewAmount(iTrial), CenterPort)])]);
 else
     CenterValveTime=0;
 end
-RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,2), RightPort);
+RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,2), RightPort);
 
 if TaskParameters.GUI.Jackpot == 3 % Decremental Jackpot reward
-    JackpotFactor = max(2,10 - sum(BpodSystem.Data.Custom.Jackpot)); 
+    JackpotFactor = max(2,10 - sum(BpodSystem.Data.Custom.TrialData.Jackpot)); 
 else 
     JackpotFactor = 2; % Fixed Jackpot reward
 end
-LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
-RightValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,2), RightPort);
+LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,1), LeftPort);
+RightValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,2), RightPort);
 
 if TaskParameters.GUI.PlayStimulus == 1 %no
     StimStartOutput = {};
@@ -66,10 +66,10 @@ end
 
 %light guided task
 if TaskParameters.GUI.LightGuided 
-    if BpodSystem.Data.Custom.LightLeft(iTrial)
+    if BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         LeftLight=255;
         RightLight = 0;
-    elseif ~BpodSystem.Data.Custom.LightLeft(iTrial)
+    elseif ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         LeftLight=0;
         RightLight=255;
     else
@@ -84,22 +84,22 @@ end
 RightWaitAction = 'ITI';
 LeftWaitAction = 'ITI';
 
-if BpodSystem.Data.Custom.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==true
-    DelayTime = BpodSystem.Data.Custom.RewardDelay(iTrial);
+if BpodSystem.Data.Custom.TrialData.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==true
+    DelayTime = BpodSystem.Data.Custom.TrialData.RewardDelay(iTrial);
     %dummy state added for plotting
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
+    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         LeftWaitAction = 'RandomReward_water_L';
-    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.LightLeft(iTrial)
+    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         RightWaitAction = 'RandomReward_water_R';
     else
         LeftWaitAction = 'water_L';
         RightWaitAction = 'water_R';
     end 
-elseif BpodSystem.Data.Custom.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==false
-    DelayTime = BpodSystem.Data.Custom.RewardDelay(iTrial);
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.LightLeft(iTrial)
+elseif BpodSystem.Data.Custom.TrialData.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==false
+    DelayTime = BpodSystem.Data.Custom.TrialData.RewardDelay(iTrial);
+    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         LeftWaitAction = 'water_L';
-    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.LightLeft(iTrial)
+    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         RightWaitAction = 'water_R';
     else
         LeftWaitAction = 'water_L';

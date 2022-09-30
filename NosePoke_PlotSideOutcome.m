@@ -60,23 +60,23 @@ switch Action
     case 'update'
         
         CurrentTrial = varargin{1};
-        ChoiceLeft = BpodSystem.Data.Custom.ChoiceLeft;
-        Rewarded =  BpodSystem.Data.Custom.Rewarded;
-        Correct =  BpodSystem.Data.Custom.Correct;
+        ChoiceLeft = BpodSystem.Data.Custom.TrialData.ChoiceLeft;
+        Rewarded =  BpodSystem.Data.Custom.TrialData.Rewarded;
+        Correct =  BpodSystem.Data.Custom.TrialData.Correct;
         
         % recompute xlim
         [mn, ~] = rescaleX(AxesHandles.HandleOutcome,CurrentTrial,nTrialsToShow);
         
         %Cumulative Reward Amount
-        R = BpodSystem.Data.Custom.RewardMagnitude;
-%         CRRtmp = repmat(  BpodSystem.Data.Custom.CenterPortRewAmount(end),1,size(R,2));
-        ndxRwd = BpodSystem.Data.Custom.Rewarded;
-        ndxCPRwd = BpodSystem.Data.Custom.CenterPortRewarded;    
-        C = zeros(size(R)); C(BpodSystem.Data.Custom.ChoiceLeft==1&ndxRwd,1) = 1; C(BpodSystem.Data.Custom.ChoiceLeft==0&ndxRwd,2) = 1;
-%         CCP = zeros(size(CRRtmp));CCP(BpodSystem.Data.Custom.ChoiceLeft==1&ndxCPRwd,1) = 1;
+        R = BpodSystem.Data.Custom.TrialData.RewardMagnitude;
+%         CRRtmp = repmat(  BpodSystem.Data.Custom.TrialData.CenterPortRewAmount(end),1,size(R,2));
+        ndxRwd = BpodSystem.Data.Custom.TrialData.Rewarded;
+        ndxCPRwd = BpodSystem.Data.Custom.TrialData.CenterPortRewarded;    
+        C = zeros(size(R)); C(BpodSystem.Data.Custom.TrialData.ChoiceLeft==1&ndxRwd,1) = 1; C(BpodSystem.Data.Custom.TrialData.ChoiceLeft==0&ndxRwd,2) = 1;
+%         CCP = zeros(size(CRRtmp));CCP(BpodSystem.Data.Custom.TrialData.ChoiceLeft==1&ndxCPRwd,1) = 1;
         R = R.*C;
 %         CRR = CRRtmp.*CCP;
-        CRR = sum(ndxCPRwd).* BpodSystem.Data.Custom.CenterPortRewAmount(end);
+        CRR = sum(ndxCPRwd).* BpodSystem.Data.Custom.TrialData.CenterPortRewAmount(end);
         R = round(sum(R(:)) + sum(CRR(:)));
         set(BpodSystem.GUIHandles.OutcomePlot.CumRwd, 'position', [CurrentTrial+1 1], 'string', ...
             [num2str(R) ' microL']);
@@ -99,12 +99,12 @@ switch Action
             
             if TaskParameters.GUI.RandomReward ==true
                 %Plot surprise Left
-                ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+                ndxRwdL = ChoiceLeft(indxToPlot) == 1 & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.TrialData.RandomThresholdPassed(indxToPlot)==1;
                 Xdata = indxToPlot(ndxRwdL); Ydata = ones(1,sum(ndxRwdL));
                 set(BpodSystem.GUIHandles.OutcomePlot.SurpriseL, 'xdata', Xdata, 'ydata', Ydata);
 
                 %Plot surprise Right
-                ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.RandomThresholdPassed(indxToPlot)==1;
+                ndxRwdR = ChoiceLeft(indxToPlot) == 0  & Correct(indxToPlot) == 1 & BpodSystem.Data.Custom.TrialData.RandomThresholdPassed(indxToPlot)==1;
                 Xdata = indxToPlot(ndxRwdR); Ydata = zeros(1,sum(ndxRwdR));
                 set(BpodSystem.GUIHandles.OutcomePlot.SurpriseR, 'xdata', Xdata, 'ydata', Ydata);
             end
@@ -131,16 +131,16 @@ switch Action
             set(BpodSystem.GUIHandles.OutcomePlot.NoChoice, 'xdata', Xdata, 'ydata', Ydata);
             
         end
-        if ~isempty(BpodSystem.Data.Custom.EarlyWithdrawal)
+        if ~isempty(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)
             indxToPlot = mn:CurrentTrial;
-            ndxEarly = BpodSystem.Data.Custom.EarlyWithdrawal(indxToPlot);
+            ndxEarly = BpodSystem.Data.Custom.TrialData.EarlyWithdrawal(indxToPlot);
             XData = indxToPlot(ndxEarly);
             YData = 0.5*ones(1,sum(ndxEarly));
             set(BpodSystem.GUIHandles.OutcomePlot.EarlyWithdrawal, 'xdata', XData, 'ydata', YData);
         end
-        if ~isempty(BpodSystem.Data.Custom.Jackpot)
+        if ~isempty(BpodSystem.Data.Custom.TrialData.Jackpot)
             indxToPlot = mn:CurrentTrial;
-            ndxJackpot = BpodSystem.Data.Custom.Jackpot(indxToPlot);
+            ndxJackpot = BpodSystem.Data.Custom.TrialData.Jackpot(indxToPlot);
             XData = indxToPlot(ndxJackpot);
             YData = 0.5*ones(1,sum(ndxJackpot));
             set(BpodSystem.GUIHandles.OutcomePlot.Jackpot, 'xdata', XData, 'ydata', YData);
@@ -150,51 +150,51 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HandleGracePeriod.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleGracePeriod,'Children'),'Visible','on');
         cla(AxesHandles.HandleGracePeriod)
-        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.GracePeriod(~isnan(BpodSystem.Data.Custom.GracePeriod)&~repmat(BpodSystem.Data.Custom.EarlyWithdrawal,50,1))*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.GracePeriod(~isnan(BpodSystem.Data.Custom.TrialData.GracePeriod)&~repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.FaceColor = 'g';
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.GracePeriod(~isnan(BpodSystem.Data.Custom.GracePeriod)&repmat(BpodSystem.Data.Custom.EarlyWithdrawal,50,1))*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.GracePeriod(~isnan(BpodSystem.Data.Custom.TrialData.GracePeriod)&repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.FaceColor = 'r';
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.EdgeColor = 'none';
-%         LeftBias = sum(BpodSystem.Data.Custom.ChoiceLeft==1)/sum(~isnan(BpodSystem.Data.Custom.ChoiceLeft),2);
+%         LeftBias = sum(BpodSystem.Data.Custom.TrialData.ChoiceLeft==1)/sum(~isnan(BpodSystem.Data.Custom.TrialData.ChoiceLeft),2);
 %         cornertext(AxesHandles.HandleMT,sprintf('Bias=%1.2f',LeftBias))
 
         % Trial rate
         BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate,'Children'),'Visible','on');
         BpodSystem.GUIHandles.OutcomePlot.TrialRate.XData = (BpodSystem.Data.TrialStartTimestamp-min(BpodSystem.Data.TrialStartTimestamp))/60;
-        BpodSystem.GUIHandles.OutcomePlot.TrialRate.YData = 1:numel(BpodSystem.Data.Custom.ChoiceLeft(1:end-1));
+        BpodSystem.GUIHandles.OutcomePlot.TrialRate.YData = 1:numel(BpodSystem.Data.Custom.TrialData.ChoiceLeft(1:end-1));
         
         % SamplingTime
         BpodSystem.GUIHandles.OutcomePlot.HandleST.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleST,'Children'),'Visible','on');
         cla(AxesHandles.HandleST)
-        BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.ST(BpodSystem.Data.Custom.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.FaceColor = 'r';
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistST = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.ST(~BpodSystem.Data.Custom.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistST = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistST.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistST.FaceColor = 'b';
         BpodSystem.GUIHandles.OutcomePlot.HistST.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.ST(BpodSystem.Data.Custom.Jackpot)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(BpodSystem.Data.Custom.TrialData.Jackpot)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.FaceColor = 'g';
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.EdgeColor = 'none';
-        EarlyP = sum(BpodSystem.Data.Custom.EarlyWithdrawal)/size(BpodSystem.Data.Custom.ChoiceLeft,2);
+        EarlyP = sum(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)/size(BpodSystem.Data.Custom.TrialData.ChoiceLeft,2);
         cornertext(AxesHandles.HandleST,sprintf('P=%1.2f',EarlyP))
         
         % MovementTime
         BpodSystem.GUIHandles.OutcomePlot.HandleMT.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleMT,'Children'),'Visible','on');
         cla(AxesHandles.HandleMT)
-        BpodSystem.GUIHandles.OutcomePlot.HistMT = histogram(AxesHandles.HandleMT,BpodSystem.Data.Custom.MT(~BpodSystem.Data.Custom.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistMT = histogram(AxesHandles.HandleMT,BpodSystem.Data.Custom.TrialData.MT(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistMT.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistMT.FaceColor = 'b';
         BpodSystem.GUIHandles.OutcomePlot.HistMT.EdgeColor = 'none';
-        LeftBias = sum(BpodSystem.Data.Custom.ChoiceLeft==1)/sum(~isnan(BpodSystem.Data.Custom.ChoiceLeft),2);
+        LeftBias = sum(BpodSystem.Data.Custom.TrialData.ChoiceLeft==1)/sum(~isnan(BpodSystem.Data.Custom.TrialData.ChoiceLeft),2);
         cornertext(AxesHandles.HandleMT,sprintf('Bias=%1.2f',LeftBias))
 
 end
