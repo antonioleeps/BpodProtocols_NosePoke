@@ -9,6 +9,8 @@ global TaskParameters
 TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %general
+    TaskParameters.GUI.SessionDescription = 'abc';
+    TaskParameters.GUIMeta.SessionDescription.Style = 'edittext';
     TaskParameters.GUI.Ports_LMR = '123';
     TaskParameters.GUI.FI = 0.5; % (s)
     TaskParameters.GUI.PreITI=1.5;
@@ -19,7 +21,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.ChoiceDeadline = 10;
     TaskParameters.GUI.LightGuided = 0;
     TaskParameters.GUIMeta.LightGuided.Style = 'checkbox';
-    TaskParameters.GUIPanels.General = {'Ports_LMR','FI','PreITI', 'VI', 'DrinkingTime'...
+    TaskParameters.GUIPanels.General = {'SessionDescription','Ports_LMR','FI','PreITI', 'VI', 'DrinkingTime'...
         'DrinkingGrace','ChoiceDeadline','LightGuided'};
     
     %"stimulus"

@@ -9,16 +9,16 @@ global nidaq
 if TaskParameters.GUI.Photometry
         
     Alignments = {[],[],[],[]};
-    if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
+    if TaskParameters.GUI.SidePokeIn && ~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal(iTrial)
         Alignments{1} = 'wait_Sin';
     end
-    if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) && BpodSystem.Data.Custom.Rewarded(iTrial)==0
+    if TaskParameters.GUI.SidePokeLeave && ~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal(iTrial) && BpodSystem.Data.Custom.TrialData.Rewarded(iTrial)==0
         Alignments{2} = 'ITI';
     end
-    if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==0
+    if TaskParameters.GUI.RewardDelivery && BpodSystem.Data.Custom.TrialData.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.TrialData.RandomReward(iTrial)==0
         Alignments{3} = 'water_';
     end
-    if TaskParameters.GUI.RewardDelivery &&  BpodSystem.Data.Custom.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.RandomReward(iTrial)==1
+    if TaskParameters.GUI.RewardDelivery &&  BpodSystem.Data.Custom.TrialData.Rewarded(iTrial)==1 && BpodSystem.Data.Custom.TrialData.RandomReward(iTrial)==1
         Alignments{4} = 'RandomReward_water_';
     end
     
