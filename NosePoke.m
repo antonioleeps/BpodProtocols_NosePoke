@@ -102,7 +102,12 @@ while RunSession
     
     % update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
-
+    
+    %% update photometry plots
+    if TaskParameters.GUI.Photometry
+        PlotPhotometryData(FigNidaq1,FigNidaq2, PhotoData, Photo2Data);
+    end
+    
     iTrial = iTrial + 1;    
 end % Main loop
 
