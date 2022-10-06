@@ -10,12 +10,14 @@ TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
 InitializeCustomDataFields(); % Initialize data (trial type) vectors and first values
 
 % ------------------------Setup Stimuli--------------------------------%
-[Player, fs] = SetupWavePlayer();
-PunishSound = rand(1, fs*.5)*2 - 1;  % white noise
-SoundIndex=1;
-Player.loadWaveform(SoundIndex, PunishSound);
-SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
-LoadSoundMessages(SoundChannels);
+if ~BpodSystem.EmulatorMode
+    [Player, fs] = SetupWavePlayer();
+    PunishSound = rand(1, fs*.5)*2 - 1;  % white noise
+    SoundIndex=1;
+    Player.loadWaveform(SoundIndex, PunishSound);
+    SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
+    LoadSoundMessages(SoundChannels);
+end
 % ---------------------------------------------------------------------%
 
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
@@ -102,7 +104,12 @@ while RunSession
     
     % update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
-
+    
+    %% update photometry plots
+    if TaskParameters.GUI.Photometry
+        PlotPhotometryData(FigNidaq1,FigNidaq2, PhotoData, Photo2Data);
+    end
+    
     iTrial = iTrial + 1;    
 end % Main loop
 
