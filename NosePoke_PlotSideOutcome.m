@@ -143,11 +143,11 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HandleGracePeriod.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleGracePeriod,'Children'),'Visible','on');
         cla(AxesHandles.HandleGracePeriod)
-        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.GracePeriod(~isnan(BpodSystem.Data.Custom.TrialData.GracePeriod)&~repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.false_exits(~isnan(BpodSystem.Data.Custom.TrialData.false_exits)&~repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.FaceColor = 'g';
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriod.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.GracePeriod(~isnan(BpodSystem.Data.Custom.TrialData.GracePeriod)&repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD = histogram(AxesHandles.HandleGracePeriod,BpodSystem.Data.Custom.TrialData.false_exits(~isnan(BpodSystem.Data.Custom.TrialData.false_exits)&repmat(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal,50,1))*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.FaceColor = 'r';
         BpodSystem.GUIHandles.OutcomePlot.HistGracePeriodEWD.EdgeColor = 'none';
@@ -164,15 +164,15 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HandleST.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleST,'Children'),'Visible','on');
         cla(AxesHandles.HandleST)
-        BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.sample_length(BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.FaceColor = 'r';
         BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistST = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistST = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.sample_length(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistST.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistST.FaceColor = 'b';
         BpodSystem.GUIHandles.OutcomePlot.HistST.EdgeColor = 'none';
-        BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.ST(BpodSystem.Data.Custom.TrialData.Jackpot)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot = histogram(AxesHandles.HandleST,BpodSystem.Data.Custom.TrialData.sample_length(BpodSystem.Data.Custom.TrialData.Jackpot)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.FaceColor = 'g';
         BpodSystem.GUIHandles.OutcomePlot.HistSTJackpot.EdgeColor = 'none';
@@ -183,7 +183,7 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HandleMT.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleMT,'Children'),'Visible','on');
         cla(AxesHandles.HandleMT)
-        BpodSystem.GUIHandles.OutcomePlot.HistMT = histogram(AxesHandles.HandleMT,BpodSystem.Data.Custom.TrialData.MT(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
+        BpodSystem.GUIHandles.OutcomePlot.HistMT = histogram(AxesHandles.HandleMT,BpodSystem.Data.Custom.TrialData.move_time(~BpodSystem.Data.Custom.TrialData.EarlyWithdrawal)*1000);
         BpodSystem.GUIHandles.OutcomePlot.HistMT.BinWidth = 50;
         BpodSystem.GUIHandles.OutcomePlot.HistMT.FaceColor = 'b';
         BpodSystem.GUIHandles.OutcomePlot.HistMT.EdgeColor = 'none';
