@@ -52,7 +52,7 @@ data_table.RandomThresholdPassed = trial_data.RandomThresholdPassed(1:n_trials).
 data_table.LightLeft = trial_data.LightLeft(1:n_trials).';
 
 [filepath, session_name, ext] = fileparts(BpodSystem.Path.CurrentDataFile);
-file_name = string(strcat("O:\data\", session_name, "_trial_custom_data_and_params.csv"));
+file_name = string(strcat("O:\data\", session_name, "_trial_custom_data.csv"));
 writetable(data_table, file_name, "Delimiter", "\t")
 
 end  % save_custom_data_and_params_tsv()
