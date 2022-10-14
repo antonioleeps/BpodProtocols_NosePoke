@@ -3,6 +3,7 @@ function UpdateCustomDataFields(iTrial)
 global BpodSystem
 global TaskParameters
 
+
 % data structure references
 raw_data = BpodSystem.Data.RawData;
 raw_events = BpodSystem.Data.RawEvents;
@@ -43,7 +44,7 @@ end
 if any(strcmp('GracePeriod', states_this_trial))
     registered_withdrawals = trial_states.GracePeriod;
 
-    for i_exit = 1: size(registered_withdrawals,1)
+    for i_exit = 1:size(registered_withdrawals,1)
         exit_time = registered_withdrawals(i_exit,1);
         return_time = registered_withdrawals(i_exit,2);
         trial_data.false_exits(i_exit,iTrial) = (return_time - exit_time);
@@ -58,16 +59,17 @@ Compute:
     necessary to account for false exit lengths 
     (only want last exit - first entry)
 %}
+any_wait_L = any(strncmp('wait_L', states_this_trial, 6));
+any_wait_R = any(strncmp('wait_R', states_this_trial, 6));
 if any(strcmp('EarlyWithdrawal', states_this_trial))
     trial_data.EarlyWithdrawal(iTrial) = true;
-else
+elseif any_wait_L || any_wait_R
     start_side_in_wait = trial_states.wait_Sin(1,1);
     
-    if any(strncmp('wait_L', states_this_trial, 6))
+    if any_wait_L
         trial_data.ChoiceLeft(iTrial) = 1;
         side_port_poke_times = trial_states.wait_L_start;
-    else 
-        any(strncmp('wait_R', states_this_trial, 6))
+    else
         trial_data.ChoiceLeft(iTrial) = 0;
         side_port_poke_times = trial_states.wait_R_start;
     end
@@ -132,12 +134,14 @@ trial_data.Correct(iTrial) = true; %any choice is correct
 trial_data.ChoiceLeft(iTrial+1) = NaN;
 trial_data.EarlyWithdrawal(iTrial+1) = false;
 trial_data.Jackpot(iTrial+1) = false;
+
 trial_data.sample_length(iTrial+1) = NaN;
 trial_data.move_time(iTrial+1) = NaN;
 trial_data.port_entry_delay(iTrial+1) = NaN;
+trial_data.false_exits(1:50,iTrial+1) = NaN(50,1);
+
 trial_data.Rewarded(iTrial+1) = false;
 trial_data.CenterPortRewarded(iTrial+1) = false;
-trial_data.GracePeriod(1:50,iTrial+1) = NaN(50,1);
 trial_data.LightLeft(iTrial+1) = rand(1,1)<0.5;
 
 trial_data.RewardAvailable(iTrial+1) = rand(1,1) < TaskParameters.GUI.RewardProb;
