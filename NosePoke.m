@@ -3,25 +3,18 @@ function NosePoke()
 
 global BpodSystem
 global TaskParameters
-global nidaq
-
-TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
-
-InitializeCustomDataFields(); % Initialize data (trial type) vectors and first values
 
 % ------------------------Setup Stimuli--------------------------------%
-if ~BpodSystem.EmulatorMode
-    [Player, fs] = SetupWavePlayer();
-    PunishSound = rand(1, fs*.5)*2 - 1;  % white noise
-    SoundIndex=1;
-    Player.loadWaveform(SoundIndex, PunishSound);
-    SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
-    LoadSoundMessages(SoundChannels);
-end
+% if ~BpodSystem.EmulatorMode
+%     [Player, fs] = SetupWavePlayer();
+%     PunishSound = rand(1, fs*TaskParameters.GUI.EarlyWithdrawalTimeOut)*2 - 1;  % white noise
+%     % PunishSound = GeneratePoissonClickTrain(20, TaskParameters.GUI.SampleTime, fs, 5);
+%     SoundIndex=1;
+%     Player.loadWaveform(SoundIndex, PunishSound);
+%     SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
+%     LoadSoundMessages(SoundChannels);
+% end
 % ---------------------------------------------------------------------%
-
-BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
-
 % Configuring PulsePal
 % load PulsePalParamStimulus.mat
 % load PulsePalParamFeedback.mat
@@ -38,6 +31,8 @@ BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 %     end
 % end
 
+TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
+BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 InitializePlots();
 
 if TaskParameters.GUI.Photometry
@@ -50,6 +45,9 @@ iTrial = 1;
 
 while RunSession
     TaskParameters = BpodParameterGUI('sync', TaskParameters);
+    InsertSessionDescription();
+    InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
+    LoadWaveformToWavePlayer(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
     InitiatePsychtoolbox();
     
     sma = StateMatrix(iTrial);
@@ -66,10 +64,10 @@ while RunSession
     % NIDAQ Stop acquisition and save data in bpod structure
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
-        [PhotoData,Photo2Data]=Nidaq_photometry('Save');
-        BpodSystem.Data.NidaqData{iTrial}=PhotoData;
+        [PhotoData,Photo2Data] = Nidaq_photometry('Save');
+        BpodSystem.Data.NidaqData{iTrial} = PhotoData;
         if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
-            BpodSystem.Data.Nidaq2Data{iTrial}=Photo2Data;
+            BpodSystem.Data.Nidaq2Data{iTrial} = Photo2Data;
         end
         PlotPhotometryData(FigNidaq1, FigNidaq2, PhotoData, Photo2Data);
     end
@@ -84,18 +82,6 @@ while RunSession
 
     if BpodSystem.Status.BeingUsed == 0
         return
-    end
-    
-    % insert session description in protocol into data.info
-    if iTrial == 1
-        BpodSystem.Data.Info.SessionDescription = ["To teach the subject the nose poking sequence with correct timings"];
-        BpodSystem.Data.Custom.General.SessionDescription = BpodSystem.Data.Info.SessionDescription;
-    end
-
-    % append session description in setting into data.info
-    if TaskParameters.GUI.SessionDescription ~= BpodSystem.Data.Info.SessionDescription(end)
-        BpodSystem.Data.Info.SessionDescription = [BpodSystem.Data.Info.SessionDescription, TaskParameters.GUI.SessionDescription];
-        BpodSystem.Data.Custom.General.SessionDescription = BpodSystem.Data.Info.SessionDescription;
     end
     
     % update fields

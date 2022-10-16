@@ -1,4 +1,4 @@
-function InitializeCustomDataFields()
+function InitializeCustomDataFields(iTrial)
 %{ 
 Initializing data (trial type) vectors and first values
 %}
@@ -6,33 +6,105 @@ Initializing data (trial type) vectors and first values
 global BpodSystem
 global TaskParameters
 
+trial_data = BpodSystem.Data.Custom.TrialData;
+
 % Trial data
-BpodSystem.Data.Custom.TrialData.ChoiceLeft = NaN;
-BpodSystem.Data.Custom.TrialData.SampleTime(1) = TaskParameters.GUI.MinSampleTime;
-BpodSystem.Data.Custom.TrialData.EarlyWithdrawal(1) = false;
-BpodSystem.Data.Custom.TrialData.Jackpot(1) = false;
+trial_data.ChoiceLeft(iTrial) = NaN;
+trial_data.EarlyWithdrawal(iTrial) = false;
+trial_data.Jackpot(iTrial) = false;
 
-BpodSystem.Data.Custom.SessionMeta.RandomReward=TaskParameters.GUI.RandomReward;
-BpodSystem.Data.Custom.TrialData.RandomThresholdPassed(1)=0;
-BpodSystem.Data.Custom.TrialData.RandomRewardProb=TaskParameters.GUI.RandomRewardProb;
-BpodSystem.Data.Custom.TrialData.RandomRewardAmount=TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+trial_data.sample_length(iTrial) = NaN; % old ST
+trial_data.move_time(iTrial) = NaN; % poke out from center to poke in at a side, old MT
+trial_data.port_entry_delay(iTrial) = NaN;  % delay time , old DT
+trial_data.false_exits(1:50,iTrial) = NaN(50,1); % old GracePeriod
 
-BpodSystem.Data.Custom.TrialData.RewardMagnitude = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
-BpodSystem.Data.Custom.TrialData.CenterPortRewAmount =TaskParameters.GUI.CenterPortRewAmount;
-BpodSystem.Data.Custom.TrialData.Rewarded = false;
-BpodSystem.Data.Custom.TrialData.CenterPortRewarded = false;
-BpodSystem.Data.Custom.TrialData.GracePeriod = 0;
-BpodSystem.Data.Custom.TrialData.LightLeft = rand(1,1)<0.5;
-BpodSystem.Data.Custom.TrialData.RewardAvailable = rand(1,1)<TaskParameters.GUI.RewardProb;
-BpodSystem.Data.Custom.TrialData.RewardDelay = TaskParameters.GUI.DelayMean;
-BpodSystem.Data.Custom.TrialData = orderfields(BpodSystem.Data.Custom.TrialData);
+trial_data.Rewarded(iTrial) = false;
+trial_data.LightLeft(iTrial) = rand(1,1)<0.5;
+trial_data.CenterPortRewAmount(iTrial) = TaskParameters.GUI.CenterPortRewAmount;
+trial_data.RewardAvailable(iTrial) = rand(1,1)<TaskParameters.GUI.RewardProb;
+
+if iTrial == 1
+    trial_data.RewardDelay(iTrial) = TaskParameters.GUI.DelayMean;
+else
+    trial_data.RewardDelay(iTrial) = abs(randn(1,1)*TaskParameters.GUI.DelaySigma + TaskParameters.GUI.DelayMean);
+end
+
+trial_data.SampleTime(iTrial) = TaskParameters.GUI.MinSampleTime;
+trial_data.RandomReward(iTrial) = TaskParameters.GUI.RandomReward;
+trial_data.RandomRewardProb(iTrial) = TaskParameters.GUI.RandomRewardProb;
+trial_data.RandomThresholdPassed(iTrial) = rand(1) < TaskParameters.GUI.RandomRewardProb;
+trial_data.RandomRewardAmount(iTrial) = TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+
+% depletion
+%if a random reward appears - it does not disrupt the previous depletion
+%train and depletion is calculated by multiplying from the normal reward
+%amount and not the surprise reward amount (e.g. reward amount for all
+%right choices 25 - 20 -16- 12.8 - 10.24 -8.192 - 5.2429 - 37.5 - 4.194
+
+if TaskParameters.GUI.Deplete && iTrial > 1
+    DummyRewardMag = trial_data.RewardMagnitude(iTrial-1,:);
+    
+    if  trial_data.ChoiceLeft(iTrial-1) == 1
+        trial_data.RewardMagnitude(iTrial,1) = DummyRewardMag(1,1)*TaskParameters.GUI.DepleteRateLeft;
+    elseif trial_data.ChoiceLeft(iTrial-1) == 0
+        trial_data.RewardMagnitude(iTrial,2) = DummyRewardMag(1,2)*TaskParameters.GUI.DepleteRateRight;
+    elseif isnan(trial_data.ChoiceLeft(iTrial-1)) && TaskParameters.GUI.Deplete
+        trial_data.RewardMagnitude(iTrial,:) = trial_data.RewardMagnitude(iTrial-1,:);
+    end
+else
+    trial_data.RewardMagnitude(iTrial,:) = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+end
+
+if TaskParameters.GUI.AutoIncrSample
+    History = 50; % Rat: History = 50
+    Crit = 0.8; % Rat: Crit = 0.8
+    if iTrial<5
+        ConsiderTrials = iTrial;
+    else
+        ConsiderTrials = max(1,iTrial-History):1:iTrial;
+    end
+    ConsiderTrials = ConsiderTrials(~isnan(trial_data.ChoiceLeft(ConsiderTrials))|trial_data.EarlyWithdrawal(ConsiderTrials));
+    if sum(~trial_data.EarlyWithdrawal(ConsiderTrials))/length(ConsiderTrials) > Crit % If SuccessRate > crit (80%)
+        if ~trial_data.EarlyWithdrawal(iTrial-1) % If last trial is not EWD
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial) + TaskParameters.GUI.MinSampleIncr)); % SampleTime increased
+        else % If last trial = EWD
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial))); % SampleTime = max(MinSampleTime or SampleTime)
+        end
+    elseif sum(~trial_data.EarlyWithdrawal(ConsiderTrials))/length(ConsiderTrials) < Crit/2  % If SuccessRate < crit/2 (40%)
+        if trial_data.EarlyWithdrawal(iTrial-1) % If last trial = EWD
+            trial_data.SampleTime(iTrial) = max(TaskParameters.GUI.MinSampleTime,min(TaskParameters.GUI.MaxSampleTime,trial_data.SampleTime(iTrial) - TaskParameters.GUI.MinSampleDecr)); % SampleTime decreased
+        else
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial))); % SampleTime = max(MinSampleTime or SampleTime)
+        end
+    else % If crit/2 < SuccessRate < crit
+        trial_data.SampleTime(iTrial) =  trial_data.SampleTime(iTrial-1); % SampleTime unchanged
+    end
+else
+    trial_data.SampleTime(iTrial) = TaskParameters.GUI.MinSampleTime;
+end
+
+if  TaskParameters.GUI.Jackpot ==2 || TaskParameters.GUI.Jackpot ==3
+    if sum(~isnan(trial_data.ChoiceLeft(1:iTrial)))>10
+        TaskParameters.GUI.JackpotTime = max(TaskParameters.GUI.JackpotMin,quantile(trial_data.ST,0.95));
+    else
+        TaskParameters.GUI.JackpotTime = TaskParameters.GUI.JackpotMin;
+    end
+end
+
+if trial_data.Jackpot(iTrial-1) % If last trial is Jackpottrial
+    trial_data.SampleTime(iTrial) = trial_data.SampleTime(iTrial)+0.05*TaskParameters.GUI.JackpotTime; % SampleTime = SampleTime + 5% JackpotTime
+end
+TaskParameters.GUI.SampleTime = trial_data.SampleTime(iTrial); % update SampleTime
+
+trial_data = orderfields(trial_data);
+BpodSystem.Data.Custom.TrialData = trial_data;
 
 % Session meta data
 % [~,BpodSystem.Data.Custom.Rig] = system('hostname');
 % [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.Path.CurrentDataFile))));
 BpodSystem.Data.Custom.SessionMeta.PsychtoolboxStartup = false;
 BpodSystem.Data.Custom.SessionMeta.MaxSampleTime = 1; %only relevant for max stimulus length
-[BpodSystem.Data.Custom.SessionMeta.RightClickTrain, BpodSystem.Data.Custom.SessionMeta.LeftClickTrain] = GetClickStimulus(BpodSystem.Data.Custom.SessionMeta.MaxSampleTime);
-BpodSystem.Data.Custom.SessionMeta.FreqStimulus = GetFreqStimulus(BpodSystem.Data.Custom.SessionMeta.MaxSampleTime);
+% [BpodSystem.Data.Custom.SessionMeta.RightClickTrain, BpodSystem.Data.Custom.SessionMeta.LeftClickTrain] = GetClickStimulus(BpodSystem.Data.Custom.SessionMeta.MaxSampleTime);
+% BpodSystem.Data.Custom.SessionMeta.FreqStimulus = GetFreqStimulus(BpodSystem.Data.Custom.SessionMeta.MaxSampleTime);
 
 end
