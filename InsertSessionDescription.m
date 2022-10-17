@@ -1,4 +1,4 @@
-function InsertSessionDescription()
+function InsertSessionDescription(iTrial)
 global BpodSystem
 global TaskParameters
 

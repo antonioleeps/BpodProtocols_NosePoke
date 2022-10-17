@@ -6,6 +6,10 @@ Initializing data (trial type) vectors and first values
 global BpodSystem
 global TaskParameters
 
+if iTrial == 1
+    BpodSystem.Data.Custom.TrialData.ChoiceLeft(iTrial) = NaN;
+end
+
 trial_data = BpodSystem.Data.Custom.TrialData;
 
 % Trial data
@@ -20,6 +24,7 @@ trial_data.false_exits(1:50,iTrial) = NaN(50,1); % old GracePeriod
 
 trial_data.Rewarded(iTrial) = false;
 trial_data.LightLeft(iTrial) = rand(1,1)<0.5;
+trial_data.CenterPortRewarded(iTrial)  = false;
 trial_data.CenterPortRewAmount(iTrial) = TaskParameters.GUI.CenterPortRewAmount;
 trial_data.RewardAvailable(iTrial) = rand(1,1)<TaskParameters.GUI.RewardProb;
 
@@ -33,7 +38,7 @@ trial_data.SampleTime(iTrial) = TaskParameters.GUI.MinSampleTime;
 trial_data.RandomReward(iTrial) = TaskParameters.GUI.RandomReward;
 trial_data.RandomRewardProb(iTrial) = TaskParameters.GUI.RandomRewardProb;
 trial_data.RandomThresholdPassed(iTrial) = rand(1) < TaskParameters.GUI.RandomRewardProb;
-trial_data.RandomRewardAmount(iTrial) = TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+trial_data.RandomRewardAmount(iTrial, :) = TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
 
 % depletion
 %if a random reward appears - it does not disrupt the previous depletion
@@ -55,7 +60,7 @@ else
     trial_data.RewardMagnitude(iTrial,:) = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
 end
 
-if TaskParameters.GUI.AutoIncrSample
+if TaskParameters.GUI.AutoIncrSample && iTrial > 1
     History = 50; % Rat: History = 50
     Crit = 0.8; % Rat: Crit = 0.8
     if iTrial<5
@@ -91,7 +96,7 @@ if  TaskParameters.GUI.Jackpot ==2 || TaskParameters.GUI.Jackpot ==3
     end
 end
 
-if trial_data.Jackpot(iTrial-1) % If last trial is Jackpottrial
+if iTrial > 1 && trial_data.Jackpot(iTrial-1) % If last trial is Jackpottrial
     trial_data.SampleTime(iTrial) = trial_data.SampleTime(iTrial)+0.05*TaskParameters.GUI.JackpotTime; % SampleTime = SampleTime + 5% JackpotTime
 end
 TaskParameters.GUI.SampleTime = trial_data.SampleTime(iTrial); % update SampleTime

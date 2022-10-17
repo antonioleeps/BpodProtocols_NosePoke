@@ -45,7 +45,6 @@ iTrial = 1;
 
 while RunSession
     TaskParameters = BpodParameterGUI('sync', TaskParameters);
-    InsertSessionDescription();
     InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
     LoadWaveformToWavePlayer(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
     InitiatePsychtoolbox();
@@ -85,6 +84,7 @@ while RunSession
     end
     
     % update fields
+    InsertSessionDescription(iTrial);
     UpdateCustomDataFields(iTrial);
     SaveBpodSessionData();
     

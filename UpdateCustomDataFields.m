@@ -243,5 +243,4 @@ end
 % end
 
 BpodSystem.Data.Custom.TrialData = trial_data;
-
 end
