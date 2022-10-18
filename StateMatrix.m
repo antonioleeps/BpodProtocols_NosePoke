@@ -64,6 +64,13 @@ else
     PunishSoundIndex=0;
 end
 
+if BpodSystem.EmulatorMode
+    early_withdrawal_action = {};
+else
+    early_withdrawal_action = {'WavePlayer1', PunishSoundIndex};
+end
+
+
 %light guided task
 if TaskParameters.GUI.LightGuided 
     if BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
@@ -261,11 +268,12 @@ sma = AddState(sma, 'Name', 'water_RJackpot',...
     'Timer', RightValveTimeJackpot,...
     'StateChangeConditions', {'Tup','DrinkingR'},...
     'OutputActions', {'ValveState', RightValve});
+
 sma = AddState(sma, 'Name', 'EarlyWithdrawal',...
     'Timer', TaskParameters.GUI.EarlyWithdrawalTimeOut,...
     'StateChangeConditions', {'Tup','ITI'},...
-    'OutputActions', {'WavePlayer1',PunishSoundIndex});
-%     'OutputActions', {'SoftCode',PunishSoundAction});
+    'OutputActions', early_withdrawal_action);
+
 if TaskParameters.GUI.VI
     sma = AddState(sma, 'Name', 'ITI',...
         'Timer',exprnd(TaskParameters.GUI.FI),...
