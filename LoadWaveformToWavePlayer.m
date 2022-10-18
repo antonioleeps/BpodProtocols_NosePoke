@@ -15,30 +15,27 @@ if ~BpodSystem.EmulatorMode
     Player.loadWaveform(SoundIndex, PunishSound);
     
     % load auditory stimuli
-    SoundLevel = 0.6;
-    
-    LeftSound = [];
-    RightSound = [];
-    
+    SoundChannels = [3];
     if TaskParameters.GUI.PlayStimulus == 2 % click task
+        SoundLevel = 1;
+        
         [LeftSound, RightSound] = GetClickStimulus(TaskParameters.GUI.SampleTime, fs, ClickLength);
+        LeftSound = LeftSound * SoundLevel;
+        RightSound = RightSound * SoundLevel;
+
+        SoundIndex = 2;
+        Player.loadWaveform(SoundIndex, LeftSound);
+
+        SoundIndex = 3;
+        Player.loadWaveform(SoundIndex, RightSound);
+
+        % load error sound
+        ErrorSound = 1 * SoundLevel;
+        SoundIndex = 4;
+        Player.loadWaveform(SoundIndex, ErrorSound);
+
+        SoundChannels = [3 1 2 3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
     end
-    
-    LeftSound = LeftSound * SoundLevel;
-    RightSound = RightSound * SoundLevel;
-    
-    SoundIndex = 2;
-    Player.loadWaveform(SoundIndex, LeftSound);
-
-    SoundIndex = 3;
-    Player.loadWaveform(SoundIndex, RightSound);
-
-    % load error sound
-    ErrorSound = [] * SoundLevel;
-    SoundIndex = 4;
-    Player.loadWaveform(SoundIndex, ErrorSound);
-
-    SoundChannels = [3 1 2 3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
     LoadSoundMessages(SoundChannels);
 end
 end

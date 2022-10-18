@@ -1,12 +1,12 @@
 function [RightClickTrain,LeftClickTrain] = GetClickStimulus(Duration, SamplingRate, ClickLength)
 
-if nargin<4
+if nargin<3
     ClickLength = 1;
 end
-if nargin<3
+if nargin<2
     SamplingRate = 25000; % in Hz
 end
-if nargin<2
+if nargin<1
     Duration = 1; % in seconds
 end
 
