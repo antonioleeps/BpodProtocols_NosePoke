@@ -49,25 +49,25 @@ if TaskParameters.GUI.PlayStimulus == 1 %no
     StimStart2Output = {};
     StimStopOutput = {};
 elseif TaskParameters.GUI.PlayStimulus == 2 %click
-    StimStartOutput = {'BNCState',1};
-    StimStart2Output = {'BNCState',1};
-    StimStopOutput = {'BNCState',0};
+    StimStartOutput = {'WavePlayer1', ['P' 3]};
+    StimStart2Output = {};
+    StimStopOutput = {};
 % elseif TaskParameters.GUI.PlayStimulus == 3 %freq
 %     StimStartOutput = {'SoftCode',21};
 %     StimStopOutput = {'SoftCode',22};
 %     StimStart2Output = {};
 end
 
-if TaskParameters.GUI.EarlyWithdrawalNoise
-    PunishSoundIndex=1;
-else
-    PunishSoundIndex=0;
-end
+% if TaskParameters.GUI.EarlyWithdrawalNoise
+%     PunishSoundIndex=1;
+% else
+%     PunishSoundIndex=0;
+% end
 
-if BpodSystem.EmulatorMode
-    early_withdrawal_action = {};
+if ~BpodSystem.EmulatorMode && TaskParameters.GUI.EarlyWithdrawalNoise
+    early_withdrawal_action = {'WavePlayer1', ['P' 0]};
 else
-    early_withdrawal_action = {'WavePlayer1', PunishSoundIndex};
+    early_withdrawal_action = {};
 end
 
 

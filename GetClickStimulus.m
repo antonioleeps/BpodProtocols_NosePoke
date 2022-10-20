@@ -1,4 +1,4 @@
-function [RightClickTrain,LeftClickTrain] = GetClickStimulus(Duration, SamplingRate, ClickLength)
+function [LeftClickTrain,RightClickTrain] = GetClickStimulus(Duration, SamplingRate, ClickLength)
 
 if nargin<3
     ClickLength = 1;
