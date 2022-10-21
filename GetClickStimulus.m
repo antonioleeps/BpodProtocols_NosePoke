@@ -1,18 +1,21 @@
-function [LeftClickTrain,RightClickTrain] = GetClickStimulus(Duration, SamplingRate, ClickLength, Mode)
+function [LeftClickTrain,RightClickTrain] = GetClickStimulus(iTrial, Duration, SamplingRate, ClickLength, SoundLevel, Mode)
 
 global TaskParameters
 global BpodSystem
 
-if nargin<4
+if nargin<6
     Mode = 'uniform';
 end
-if nargin<3
+if nargin<5
+    SoundLevel = 0.8;
+end
+if nargin<4
     ClickLength = 1;
 end
-if nargin<2
+if nargin<3
     SamplingRate = 25000; % in Hz
 end
-if nargin<1
+if nargin<2
     Duration = 1; % in seconds
 end
 
@@ -20,15 +23,57 @@ end
 switch Mode
     case 'uniform'
         rr = rand(1,1)*0.6+0.2;
-        LeftClickRate = ceil(rr*100);
-        RightClickRate = 100 - LeftClickRate;
+        BpodSystem.Data.Custom.LeftClickRate(iTrial) = ceil(rr*100);
+        BpodSystem.Data.Custom.RightClickRate(iTrial) = 100 - BpodSystem.Data.Custom.LeftClickRate(iTrial);
+        
+        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+  
     case 'beta'
-        BpodSystem.Data.Custom.AuditoryOmega(a) = betarnd(TaskParameters.GUI.AuditoryAlpha/4,TaskParameters.GUI.AuditoryAlpha/4,1,1);
-        LeftClickRate = round(BpodSystem.Data.Custom.AuditoryOmega(a)*TaskParameters.GUI.SumRates);
-        RightClickRate = TaskParameters.GUI.SumRates - LeftClickRate;
+        if iTrial > TaskParameters.GUI.StartEasyTrials
+            AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha;
+        else
+            AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha/4;
+        end
+        BetaRatio = (1 - min(0.9,max(0.1,TaskParameters.GUI.LeftBiasAud))) / min(0.9,max(0.1,TaskParameters.GUI.LeftBiasAud)); %use a = ratio*b to yield E[X] = LeftBiasAud using Beta(a,b) pdf
+        %cut off between 0.1-0.9 to prevent extreme values (only one side) and div by zero
+        BetaA =  (2*AuditoryAlpha*BetaRatio) / (1+BetaRatio); %make a,b symmetric around AuditoryAlpha to make B symmetric
+        BetaB = (AuditoryAlpha-BetaA) + AuditoryAlpha;
+        
+        if rand(1,1) < TaskParameters.GUI.Percent50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
+            BpodSystem.Data.Custom.AuditoryOmega(iTrial) = 0.5;
+        else
+            BpodSystem.Data.Custom.AuditoryOmega(iTrial) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
+        end
+        
+        BpodSystem.Data.Custom.LeftClickRate(iTrial) = round(BpodSystem.Data.Custom.AuditoryOmega(iTrial)*TaskParameters.GUI.SumRates);
+        BpodSystem.Data.Custom.RightClickRate(iTrial) = TaskParameters.GUI.SumRates - BpodSystem.Data.Custom.LeftClickRate(iTrial);
+        
+        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        
+        if BpodSystem.Data.Custom.AuditoryOmega(iTrial) == 0.5 %make sure 50/50 are true 50/50 trials
+            while abs(sum(LeftSound) - sum(RightSound)) >= ClickLength
+                LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+                RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+            end
+        end
 end
 
-LeftClickTrain = GeneratePoissonClickTrain(LeftClickRate, Duration, SamplingRate, ClickLength);
-RightClickTrain = GeneratePoissonClickTrain(RightClickRate, Duration, SamplingRate, ClickLength);
+LeftClickTrain = LeftClickTrain * SoundLevel;
+RightClickTrain = RightClickTrain * SoundLevel;
+
+BpodSystem.Data.Custom.TrialData.LeftClickTrain{iTrial} = LeftClickTrain;
+BpodSystem.Data.Custom.TrialData.RightClickTrain{iTrial} = RightClickTrain;
+
+if sum(LeftClickTrain) - sum(RightClickTrain) >= ClickLength
+    BpodSystem.Data.Custom.TrialData.LeftRewarded(iTrial) = double(1);
+elseif sum(RightClickTrain) - sum(LeftClickTrain) >= ClickLength
+    BpodSystem.Data.Custom.TrialData.LeftRewarded(iTrial) = double(0);
+else
+    BpodSystem.Data.Custom.TrialData.LeftRewarded(iTrial) = rand<0.5;
+end
+
+BpodSystem.Data.Custom.TrialData.DV(iTrial) = (sum(LeftClickTrain)-sum(RightClickTrain))./(sum(LeftClickTrain)+sum(RightClickTrain));
 
 end

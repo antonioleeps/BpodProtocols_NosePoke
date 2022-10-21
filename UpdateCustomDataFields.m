@@ -13,10 +13,6 @@ trial_data = BpodSystem.Data.Custom.TrialData;
 BpodSystem.Data.TrialTypes(iTrial)=1;
 
 %% OutcomeRecord
-trial_data.sample_length(iTrial) = NaN;
-trial_data.move_time(iTrial) = NaN; % poke out from center to poke in at a side
-trial_data.port_entry_delay(iTrial) = NaN;  % delay time 
-trial_data.false_exits(1:50,iTrial) = NaN(50,1);
 
 % Go through the states visited this trial and 
 idx_states_visited = raw_data.OriginalStateData{iTrial};
