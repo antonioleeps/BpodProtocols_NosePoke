@@ -7,7 +7,7 @@ if nargin<6
     Mode = 'uniform';
 end
 if nargin<5
-    SoundLevel = 0.8;
+    SoundLevel = 1;
 end
 if nargin<4
     ClickLength = 1;
@@ -43,11 +43,11 @@ switch Mode
         if rand(1,1) < TaskParameters.GUI.Percent50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
             BpodSystem.Data.Custom.AuditoryOmega(iTrial) = 0.5;
         else
-            BpodSystem.Data.Custom.AuditoryOmega(iTrial) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
+            BpodSystem.Data.Custom.TrialData.AuditoryOmega(iTrial) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
         end
         
-        BpodSystem.Data.Custom.LeftClickRate(iTrial) = round(BpodSystem.Data.Custom.AuditoryOmega(iTrial)*TaskParameters.GUI.SumRates);
-        BpodSystem.Data.Custom.RightClickRate(iTrial) = TaskParameters.GUI.SumRates - BpodSystem.Data.Custom.LeftClickRate(iTrial);
+        BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial) = round(BpodSystem.Data.Custom.AuditoryOmega(iTrial)*TaskParameters.GUI.SumRates);
+        BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial) = TaskParameters.GUI.SumRates - BpodSystem.Data.Custom.LeftClickRate(iTrial);
         
         LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
         RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
