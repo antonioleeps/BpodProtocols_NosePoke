@@ -23,11 +23,11 @@ end
 switch Mode
     case 'uniform'
         rr = rand(1,1)*0.6+0.2;
-        BpodSystem.Data.Custom.LeftClickRate(iTrial) = ceil(rr*100);
-        BpodSystem.Data.Custom.RightClickRate(iTrial) = 100 - BpodSystem.Data.Custom.LeftClickRate(iTrial);
+        BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial) = ceil(rr*100);
+        BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial) = 100 - BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial);
         
-        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
-        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
   
     case 'beta'
         if iTrial > TaskParameters.GUI.StartEasyTrials
@@ -46,16 +46,16 @@ switch Mode
             BpodSystem.Data.Custom.TrialData.AuditoryOmega(iTrial) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
         end
         
-        BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial) = round(BpodSystem.Data.Custom.AuditoryOmega(iTrial)*TaskParameters.GUI.SumRates);
-        BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial) = TaskParameters.GUI.SumRates - BpodSystem.Data.Custom.LeftClickRate(iTrial);
+        BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial) = round(BpodSystem.Data.Custom.TrialData.AuditoryOmega(iTrial)*TaskParameters.GUI.SumRates);
+        BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial) = TaskParameters.GUI.SumRates - BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial);
         
-        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
-        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+        RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
         
-        if BpodSystem.Data.Custom.AuditoryOmega(iTrial) == 0.5 %make sure 50/50 are true 50/50 trials
+        if BpodSystem.Data.Custom.TrialData.AuditoryOmega(iTrial) == 0.5 %make sure 50/50 are true 50/50 trials
             while abs(sum(LeftSound) - sum(RightSound)) >= ClickLength
-                LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
-                RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
+                LeftClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.LeftClickRate(iTrial), Duration, SamplingRate, ClickLength);
+                RightClickTrain = GeneratePoissonClickTrain(BpodSystem.Data.Custom.TrialData.RightClickRate(iTrial), Duration, SamplingRate, ClickLength);
             end
         end
 end
