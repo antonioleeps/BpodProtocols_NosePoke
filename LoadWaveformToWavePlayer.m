@@ -19,7 +19,7 @@ if ~BpodSystem.EmulatorMode
     if TaskParameters.GUI.PlayStimulus == 2 % click task
         SoundLevel = 1;
         
-        [LeftSound, RightSound] = GetClickStimulus(TaskParameters.GUI.SampleTime, fs, ClickLength);
+        [LeftSound, RightSound] = GetClickStimulus(iTrial, TaskParameters.GUI.SampleTime, fs, ClickLength, SoundLevel);
         LeftSound = LeftSound * SoundLevel;
         RightSound = RightSound * SoundLevel;
 
