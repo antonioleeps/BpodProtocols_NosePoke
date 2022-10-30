@@ -4,7 +4,7 @@ global TaskParameters
 
 % insert session description in protocol into data.info
 if iTrial == 1
-    BpodSystem.Data.Info.SessionDescription = ["To teach the subject the nose poking sequence with correct timings"];
+    BpodSystem.Data.Info.SessionDescription = "To teach the subject the nose poking sequence with correct timings";
     BpodSystem.Data.Custom.General.SessionDescription = BpodSystem.Data.Info.SessionDescription;
 end
 
