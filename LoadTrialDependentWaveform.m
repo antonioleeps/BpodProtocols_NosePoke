@@ -1,0 +1,32 @@
+function LoadTrialDependentWaveform(iTrial, SoundLevel, ClickLength)
+global BpodSystem
+global TaskParameters
+global Player
+
+if nargin <3
+    ClickLength = 1; % in sampling frame
+end
+
+if nargin <2
+    SoundLevel = 0.8;
+end
+
+if ~BpodSystem.EmulatorMode
+    % load auditory stimuli
+    fs = Player.SamplingRate;
+    
+    if TaskParameters.GUI.PlayStimulus == 2 % click task
+        [LeftClickTrain,RightClickTrain] = GetClickStimulus(iTrial, TaskParameters.GUI.SampleTime, fs, ClickLength, SoundLevel);
+
+        SoundIndex = 3;
+        Player.loadWaveform(SoundIndex, LeftClickTrain);
+
+        SoundIndex = 4;
+        Player.loadWaveform(SoundIndex, RightClickTrain);
+    elseif TaskParameters.GUI.PlayStimulus == 3 % freq task
+    
+    end
+
+    %Player.Waveforms;
+end
+end

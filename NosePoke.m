@@ -35,6 +35,12 @@ TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 InitializePlots();
 
+if ~BpodSystem.EmulatorMode
+    [Player, fs]=SetupWavePlayer(25000); % 25kHz =sampling rate of 8Ch with 8Ch fully on
+    LoadIndependentWaveform;
+    LoadTriggerProfileMatrix;
+end
+    
 if TaskParameters.GUI.Photometry
     [FigNidaq1,FigNidaq2]=InitializeNidaq();
 end
@@ -44,10 +50,14 @@ RunSession = true;
 iTrial = 1;
 
 while RunSession
-    TaskParameters = BpodParameterGUI('sync', TaskParameters);
     InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
-    LoadWaveformToWavePlayer(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
-    InitiatePsychtoolbox();
+    
+    if ~BpodSystem.EmulatorMode
+        LoadTrialDependeWaveform(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
+        InitiatePsychtoolbox();
+    end
+    
+    TaskParameters = BpodParameterGUI('sync', TaskParameters);
     
     sma = StateMatrix(iTrial);
     SendStateMatrix(sma);
@@ -64,16 +74,18 @@ while RunSession
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
         [PhotoData,Photo2Data] = Nidaq_photometry('Save');
-        BpodSystem.Data.NidaqData{iTrial} = PhotoData;
+        BpodSystem.Data.TrialData.NidaqData{iTrial} = PhotoData;
         if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
-            BpodSystem.Data.Nidaq2Data{iTrial} = Photo2Data;
+            BpodSystem.Data.TrialData.Nidaq2Data{iTrial} = Photo2Data;
         end
         PlotPhotometryData(FigNidaq1, FigNidaq2, PhotoData, Photo2Data);
     end
     
-    % Bpod save
+    % Bpod save & update fields
     if ~isempty(fieldnames(RawEvents))
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents);
+        InsertSessionDescription(iTrial);
+        UpdateCustomDataFields(iTrial);
         SaveBpodSessionData();
     end
 
@@ -82,12 +94,7 @@ while RunSession
     if BpodSystem.Status.BeingUsed == 0
         return
     end
-    
-    % update fields
-    InsertSessionDescription(iTrial);
-    UpdateCustomDataFields(iTrial);
-    SaveBpodSessionData();
-    
+        
     % update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
     

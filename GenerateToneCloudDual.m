@@ -120,6 +120,7 @@ for ind = 1:length(cloud)
     
     cloud_toplot(cloud(ind),tonePos) = cloud(1,ind); 
 end
+end
 
 
 

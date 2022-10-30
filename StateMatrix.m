@@ -3,7 +3,9 @@ function sma = StateMatrix(iTrial)
 global BpodSystem
 global TaskParameters
 
-% Define ports
+trial_data = BpodSystem.Data.Custom.TrialData;
+
+%% Define ports
 LeftPort = floor(mod(TaskParameters.GUI.Ports_LMR/100,10));
 CenterPort = floor(mod(TaskParameters.GUI.Ports_LMR/10,10));
 RightPort = mod(TaskParameters.GUI.Ports_LMR,10);
@@ -18,106 +20,87 @@ LeftValve = 2^(LeftPort-1);
 CenterValve = 2^(CenterPort-1);
 RightValve = 2^(RightPort-1);
 
-% random reward - no change in state matrix, changes RewardMagnitude on a trial by trial basis
-
-if TaskParameters.GUI.RandomReward == true && BpodSystem.Data.Custom.TrialData.RandomThresholdPassed(iTrial)==1
-    surpriseRewardAmount=TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
-    BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:)= [TaskParameters.GUI.rewardAmount, TaskParameters.GUI.rewardAmount]+surpriseRewardAmount;
-else
-    BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:)=BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,:);
-    
-end
-
-LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,1), LeftPort);
+%% Calculate value time for ports in different situations
+LeftValveTime  = GetValveTimes(trial_data.RewardMagnitude(iTrial,1), LeftPort);
 if rand(1,1) <= TaskParameters.GUI.CenterPortProb && TaskParameters.GUI.Jackpot == 4
-    CenterValveTime  = min([0.1,max([0.001,GetValveTimes(BpodSystem.Data.Custom.TrialData.CenterPortRewAmount(iTrial), CenterPort)])]);
+    CenterValveTime  = min([0.1,max([0.001,GetValveTimes(trial_data.CenterPortRewAmount(iTrial), CenterPort)])]);
 else
     CenterValveTime=0;
 end
-RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,2), RightPort);
+RightValveTime  = GetValveTimes(trial_data.RewardMagnitude(iTrial,2), RightPort);
 
 if TaskParameters.GUI.Jackpot == 3 % Decremental Jackpot reward
-    JackpotFactor = max(2,10 - sum(BpodSystem.Data.Custom.TrialData.Jackpot)); 
+    JackpotFactor = max(2,10 - sum(trial_data.Jackpot)); 
 else 
     JackpotFactor = 2; % Fixed Jackpot reward
 end
-LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,1), LeftPort);
-RightValveTimeJackpot  = JackpotFactor*GetValveTimes(BpodSystem.Data.Custom.TrialData.RewardMagnitude(iTrial,2), RightPort);
+LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(iTrial,1), LeftPort);
+RightValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(iTrial,2), RightPort);
 
-if TaskParameters.GUI.PlayStimulus == 1 %no
-    StimStartOutput = {};
-    StimStart2Output = {};
-    StimStopOutput = {};
-elseif TaskParameters.GUI.PlayStimulus == 2 %click
-    StimStartOutput = {'WavePlayer1', ['P' 3]};
-    StimStart2Output = {};
-    StimStopOutput = {};
-% elseif TaskParameters.GUI.PlayStimulus == 3 %freq
-%     StimStartOutput = {'SoftCode',21};
-%     StimStopOutput = {'SoftCode',22};
-%     StimStart2Output = {};
+%% Sound Output action
+StimStartOutput = {};
+StimStart2Output = {};
+StimStopOutput = {};
+early_withdrawal_action = {};
+if ~BpodSystem.EmulatorMode
+    if TaskParameters.GUI.PlayStimulus == 2 %click
+        StimStartOutput = {'WavePlayer1', ['P' 3]}; %play the 4th profile
+    % elseif TaskParameters.GUI.PlayStimulus == 3 %freq
+    %     StimStartOutput = {};
+    %     StimStopOutput = {};
+    %     StimStart2Output = {};
+    end
+
+    if TaskParameters.GUI.EarlyWithdrawalNoise
+        early_withdrawal_action = {'WavePlayer1', ['P' 0]}; %play the 1st profile
+    end
 end
 
-% if TaskParameters.GUI.EarlyWithdrawalNoise
-%     PunishSoundIndex=1;
-% else
-%     PunishSoundIndex=0;
-% end
+%% light guided task
+LeftLight = 255;
+RightLight = 255;
 
-if ~BpodSystem.EmulatorMode && TaskParameters.GUI.EarlyWithdrawalNoise
-    early_withdrawal_action = {'WavePlayer1', ['P' 0]};
-else
-    early_withdrawal_action = {};
-end
-
-
-%light guided task
 if TaskParameters.GUI.LightGuided 
-    if BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
-        LeftLight=255;
+    if trial_data.LightLeft(iTrial)
         RightLight = 0;
-    elseif ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
-        LeftLight=0;
-        RightLight=255;
+    elseif ~trial_data.LightLeft(iTrial)
+        LeftLight = 0;
     else
         error('Light guided state matrix error');
     end
-else
-    LeftLight=255;
-    RightLight=255;
 end
 
-% reward available?
+%% reward available?
+% The followings variables are state names
 RightWaitAction = 'ITI';
 LeftWaitAction = 'ITI';
 
-if BpodSystem.Data.Custom.TrialData.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==true
-    DelayTime = BpodSystem.Data.Custom.TrialData.RewardDelay(iTrial);
-    %dummy state added for plotting
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
+DelayTime = 30;
+if trial_data.RewardAvailable(iTrial)
+    DelayTime = trial_data.RewardDelay(iTrial);
+    
+    if TaskParameters.GUI.LightGuided && TaskParameters.GUI.RandomReward %dummy state added for plotting
+            if trial_data.LightLeft(iTrial)
+                LeftWaitAction = 'RandomReward_water_L';
+            elseif ~trial_data.LightLeft(iTrial)
+                RightWaitAction = 'RandomReward_water_R';
+            end
+    elseif TaskParameters.GUI.LightGuided && ~TaskParameters.GUI.RandomReward
+            if trial_data.LightLeft(iTrial)
+                LeftWaitAction = 'water_L';
+            elseif ~trial_data.LightLeft(iTrial)
+                RightWaitAction = 'water_R';
+            end
+    elseif ~TaskParameters.GUI.LightGuided && TaskParameters.GUI.RandomReward
         LeftWaitAction = 'RandomReward_water_L';
-    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
         RightWaitAction = 'RandomReward_water_R';
-    else
-        LeftWaitAction = 'water_L';
-        RightWaitAction = 'water_R';
-    end 
-elseif BpodSystem.Data.Custom.TrialData.RewardAvailable(iTrial) && TaskParameters.GUI.RandomReward==false
-    DelayTime = BpodSystem.Data.Custom.TrialData.RewardDelay(iTrial);
-    if TaskParameters.GUI.LightGuided && BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
-        LeftWaitAction = 'water_L';
-    elseif TaskParameters.GUI.LightGuided && ~BpodSystem.Data.Custom.TrialData.LightLeft(iTrial)
-        RightWaitAction = 'water_R';
-    else
+    elseif ~TaskParameters.GUI.LightGuided && ~TaskParameters.GUI.RandomReward
         LeftWaitAction = 'water_L';
         RightWaitAction = 'water_R';
     end
-else
-    DelayTime = 30;
 end
 
-    
-    
+%% Set up state matrix    
 sma = NewStateMatrix();
 sma = SetGlobalTimer(sma,1,TaskParameters.GUI.SampleTime);
 sma = SetGlobalTimer(sma,2,DelayTime);
@@ -136,7 +119,7 @@ sma = AddState(sma, 'Name', 'wait_Cin',...
 
 sma = AddState(sma, 'Name', 'StartSampling',...
     'Timer', 0.01,...
-    'StateChangeConditions', {'Tup', 'Sampling'},...S
+    'StateChangeConditions', {'Tup', 'Sampling'},...
     'OutputActions', {'GlobalTimerTrig',1});
 sma = AddState(sma, 'Name', 'Sampling',...
     'Timer', TaskParameters.GUI.SampleTime,...
@@ -174,7 +157,7 @@ elseif TaskParameters.GUI.Jackpot == 2 || TaskParameters.GUI.Jackpot == 3 % Jack
         'Timer',0.001,...
         'StateChangeConditions', {'Tup','wait_Sin'},...
         'OutputActions',[StimStopOutput {strcat('PWM',num2str(LeftPort)),255,strcat('PWM',num2str(RightPort)),255}]);
-elseif TaskParameters.GUI.Jackpot ==4 % 
+elseif TaskParameters.GUI.Jackpot ==4 % Centre port reward
     sma = AddState(sma, 'Name', 'stillSampling',...
         'Timer', CenterValveTime,...
         'StateChangeConditions', {'Tup','lat_Go_signal'},...
@@ -202,6 +185,7 @@ sma = AddState(sma, 'Name', 'wait_L_grace',...
     'Timer',TaskParameters.GUI.DelayGracePeriod,...
     'StateChangeConditions', {'Tup','ITI','GlobalTimer2_End',LeftWaitAction,LeftPortIn,'wait_L'},...
     'OutputActions',{});
+
 sma = AddState(sma, 'Name', 'wait_R_start',...
     'Timer',0,...
     'StateChangeConditions', {'Tup','wait_R'},...
