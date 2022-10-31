@@ -3,6 +3,7 @@ function NosePoke()
 
 global BpodSystem
 global TaskParameters
+global Player
 
 % ------------------------Setup Stimuli--------------------------------%
 % if ~BpodSystem.EmulatorMode
@@ -53,7 +54,7 @@ while RunSession
     InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
     
     if ~BpodSystem.EmulatorMode
-        LoadTrialDependeWaveform(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
+        LoadTrialDependentWaveform(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
         InitiatePsychtoolbox();
     end
     
