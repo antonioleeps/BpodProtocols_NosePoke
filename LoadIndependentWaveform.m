@@ -1,6 +1,8 @@
-function LoadIndependentWaveform()
-global Player
+function LoadIndependentWaveform(Player)
+% global Player
 global TaskParameters
+
+fs = Player.SamplingRate;
 
 PunishSound = rand(1, fs*TaskParameters.GUI.EarlyWithdrawalTimeOut)*2 - 1;
 SoundIndex = 1;

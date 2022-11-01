@@ -1,14 +1,14 @@
-function LoadTrialDependentWaveform(iTrial, SoundLevel, ClickLength)
+function LoadTrialDependentWaveform(Player, iTrial, SoundLevel, ClickLength)
 global BpodSystem
 global TaskParameters
-global Player
+% global Player
 
-if nargin <3
-    ClickLength = 1; % in sampling frame
+if nargin <4
+    ClickLength = 2; % in sampling frame
 end
 
-if nargin <2
-    SoundLevel = 0.8;
+if nargin <3
+    SoundLevel = 1;
 end
 
 if ~BpodSystem.EmulatorMode
