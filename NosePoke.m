@@ -3,7 +3,7 @@ function NosePoke()
 
 global BpodSystem
 global TaskParameters
-global Player
+% global Player
 
 % ------------------------Setup Stimuli--------------------------------%
 % if ~BpodSystem.EmulatorMode
@@ -38,8 +38,8 @@ InitializePlots();
 
 if ~BpodSystem.EmulatorMode
     [Player, fs]=SetupWavePlayer(25000); % 25kHz =sampling rate of 8Ch with 8Ch fully on
-    LoadIndependentWaveform;
-    LoadTriggerProfileMatrix;
+    LoadIndependentWaveform(Player);
+    LoadTriggerProfileMatrix(Player);
 end
     
 if TaskParameters.GUI.Photometry
@@ -54,7 +54,7 @@ while RunSession
     InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
     
     if ~BpodSystem.EmulatorMode
-        LoadTrialDependentWaveform(iTrial); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
+        LoadTrialDependentWaveform(Player, iTrial, 5, 2); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
         InitiatePsychtoolbox();
     end
     
@@ -106,6 +106,8 @@ while RunSession
     
     iTrial = iTrial + 1;    
 end % Main loop
+
+clear Player % release the serial port (done automatically when function returns)
 
 if TaskParameters.GUI.Photometry
     CheckPhotometry(PhotoData, Photo2Data);

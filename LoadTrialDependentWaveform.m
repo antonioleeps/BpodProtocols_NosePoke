@@ -1,13 +1,13 @@
-function LoadTrialDependentWaveform(iTrial, SoundLevel, ClickLength)
+function LoadTrialDependentWaveform(Player, iTrial, SoundLevel, ClickLength)
 global BpodSystem
 global TaskParameters
-global Player
+% global Player
 
-if nargin <3
+if nargin <4
     ClickLength = 1; % in sampling frame
 end
 
-if nargin <2
+if nargin <3
     SoundLevel = 0.8;
 end
 

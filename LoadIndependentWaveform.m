@@ -1,5 +1,5 @@
-function LoadIndependentWaveform()
-global Player
+function LoadIndependentWaveform(Player)
+% global Player
 global TaskParameters
 
 fs = Player.SamplingRate;
