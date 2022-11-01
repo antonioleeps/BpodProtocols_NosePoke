@@ -4,11 +4,11 @@ global TaskParameters
 % global Player
 
 if nargin <4
-    ClickLength = 1; % in sampling frame
+    ClickLength = 2; % in sampling frame
 end
 
 if nargin <3
-    SoundLevel = 0.8;
+    SoundLevel = 1;
 end
 
 if ~BpodSystem.EmulatorMode
