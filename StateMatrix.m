@@ -42,6 +42,7 @@ StimStartOutput = {};
 StimStart2Output = {};
 StimStopOutput = {};
 early_withdrawal_action = {};
+Incorrect_Action = {};
 if ~BpodSystem.EmulatorMode
     if TaskParameters.GUI.PlayStimulus == 2 %click
         StimStartOutput = {'WavePlayer1', ['P' 3]}; %play the 4th profile
@@ -53,6 +54,10 @@ if ~BpodSystem.EmulatorMode
 
     if TaskParameters.GUI.EarlyWithdrawalNoise
         early_withdrawal_action = {'WavePlayer1', ['P' 0]}; %play the 1st profile
+    end
+    
+    if TaskParameters.GUI.LightGuided
+        Incorrect_Action = {'WavePlayer1', ['P' 4]};
     end
 end
 
@@ -261,7 +266,7 @@ sma = AddState(sma, 'Name', 'EarlyWithdrawal',...
 sma = AddState(sma, 'Name', 'Incorrect_Choice',...
     'Timer', TaskParameters.GUI.EarlyWithdrawalTimeOut,...
     'StateChangeConditions', {'Tup','ITI'},...
-    'OutputActions', {'WavePlayer1', ['P' 4]});
+    'OutputActions', Incorrect_Action);
 
 if TaskParameters.GUI.VI
     sma = AddState(sma, 'Name', 'ITI',...
