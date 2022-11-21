@@ -158,7 +158,7 @@ switch Action
         BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate.Visible = 'on';
         set(get(BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate,'Children'),'Visible','on');
         BpodSystem.GUIHandles.OutcomePlot.TrialRate.XData = (BpodSystem.Data.TrialStartTimestamp-min(BpodSystem.Data.TrialStartTimestamp))/60;
-        BpodSystem.GUIHandles.OutcomePlot.TrialRate.YData = 1:numel(BpodSystem.Data.Custom.TrialData.ChoiceLeft(1:end-1));
+        BpodSystem.GUIHandles.OutcomePlot.TrialRate.YData = 1:numel(BpodSystem.Data.Custom.TrialData.ChoiceLeft(1:end));
         
         % SamplingTime
         BpodSystem.GUIHandles.OutcomePlot.HandleST.Visible = 'on';

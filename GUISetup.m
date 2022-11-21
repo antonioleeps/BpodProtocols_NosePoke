@@ -1,14 +1,12 @@
 function TaskParameters = GUISetup()
 
 global BpodSystem
-global TaskParameters
-
-
 
 %% Task parameters
 TaskParameters = BpodSystem.ProtocolSettings;
+
 if isempty(fieldnames(TaskParameters))
-    %general
+    % general
     TaskParameters.GUI.SessionDescription = 'abc';
     TaskParameters.GUIMeta.SessionDescription.Style = 'edittext';
     TaskParameters.GUI.Ports_LMR = '123';
@@ -136,19 +134,17 @@ if isempty(fieldnames(TaskParameters))
                             'LED1b_Name','LED1b_Amp','LED1b_Freq'};
                         
     %% rig-specific
-        TaskParameters.GUI.nidaqDev='Dev2';
-        TaskParameters.GUIMeta.nidaqDev.Style='edittext';
-        
-        TaskParameters.GUIPanels.PhotometryRig={'nidaqDev'};
+    TaskParameters.GUI.nidaqDev='Dev2';
+    TaskParameters.GUIMeta.nidaqDev.Style='edittext';
+
+    TaskParameters.GUIPanels.PhotometryRig={'nidaqDev'};
     
     TaskParameters.GUITabs.General = {'General','Sampling','Reward','RewardDelay'};
     TaskParameters.GUITabs.Photometry = {'PhotometryRecording','PhotometryNidaq','PhotometryPlot','PhotometryRig'};
-    
-        
+       
     TaskParameters.GUI = orderfields(TaskParameters.GUI);
     TaskParameters.Figures.OutcomePlot.Position = [200, 200, 1000, 400];
 end
 BpodParameterGUI('init', TaskParameters);
-
 
 end  % End function

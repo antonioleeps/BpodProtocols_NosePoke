@@ -3,25 +3,19 @@ function NosePoke()
 
 global BpodSystem
 global TaskParameters
-global nidaq
-
-TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
-
-InitializeCustomDataFields(); % Initialize data (trial type) vectors and first values
+% global Player
 
 % ------------------------Setup Stimuli--------------------------------%
-if ~BpodSystem.EmulatorMode
-    [Player, fs] = SetupWavePlayer();
-    PunishSound = rand(1, fs*.5)*2 - 1;  % white noise
-    SoundIndex=1;
-    Player.loadWaveform(SoundIndex, PunishSound);
-    SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
-    LoadSoundMessages(SoundChannels);
-end
+% if ~BpodSystem.EmulatorMode
+%     [Player, fs] = SetupWavePlayer();
+%     PunishSound = rand(1, fs*TaskParameters.GUI.EarlyWithdrawalTimeOut)*2 - 1;  % white noise
+%     % PunishSound = GeneratePoissonClickTrain(20, TaskParameters.GUI.SampleTime, fs, 5);
+%     SoundIndex=1;
+%     Player.loadWaveform(SoundIndex, PunishSound);
+%     SoundChannels = [3];  % Array of channels for each sound: play on left (1), right (2), or both (3)
+%     LoadSoundMessages(SoundChannels);
+% end
 % ---------------------------------------------------------------------%
-
-BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
-
 % Configuring PulsePal
 % load PulsePalParamStimulus.mat
 % load PulsePalParamFeedback.mat
@@ -38,8 +32,16 @@ BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 %     end
 % end
 
+TaskParameters = GUISetup();  % Set experiment parameters in GUISetup.m
+BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 InitializePlots();
 
+if ~BpodSystem.EmulatorMode
+    [Player, fs]=SetupWavePlayer(25000); % 25kHz =sampling rate of 8Ch with 8Ch fully on
+    LoadIndependentWaveform(Player);
+    LoadTriggerProfileMatrix(Player);
+end
+    
 if TaskParameters.GUI.Photometry
     [FigNidaq1,FigNidaq2]=InitializeNidaq();
 end
@@ -49,8 +51,14 @@ RunSession = true;
 iTrial = 1;
 
 while RunSession
+    InitializeCustomDataFields(iTrial); % Initialize data (trial type) vectors and first values
+    
+    if ~BpodSystem.EmulatorMode
+        LoadTrialDependentWaveform(Player, iTrial, 5, 2); % Load white noise, stimuli trains, and error sound to wave player if not EmulatorMode
+        InitiatePsychtoolbox();
+    end
+    
     TaskParameters = BpodParameterGUI('sync', TaskParameters);
-    InitiatePsychtoolbox();
     
     sma = StateMatrix(iTrial);
     SendStateMatrix(sma);
@@ -66,17 +74,19 @@ while RunSession
     % NIDAQ Stop acquisition and save data in bpod structure
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
-        [PhotoData,Photo2Data]=Nidaq_photometry('Save');
-        BpodSystem.Data.NidaqData{iTrial}=PhotoData;
+        [PhotoData,Photo2Data] = Nidaq_photometry('Save');
+        BpodSystem.Data.TrialData.NidaqData{iTrial} = PhotoData;
         if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
-            BpodSystem.Data.Nidaq2Data{iTrial}=Photo2Data;
+            BpodSystem.Data.TrialData.Nidaq2Data{iTrial} = Photo2Data;
         end
         PlotPhotometryData(FigNidaq1, FigNidaq2, PhotoData, Photo2Data);
     end
     
-    % Bpod save
+    % Bpod save & update fields
     if ~isempty(fieldnames(RawEvents))
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents);
+        InsertSessionDescription(iTrial);
+        UpdateCustomDataFields(iTrial);
         SaveBpodSessionData();
     end
 
@@ -85,23 +95,7 @@ while RunSession
     if BpodSystem.Status.BeingUsed == 0
         return
     end
-    
-    % insert session description in protocol into data.info
-    if iTrial == 1
-        BpodSystem.Data.Info.SessionDescription = ["To teach the subject the nose poking sequence with correct timings"];
-        BpodSystem.Data.Custom.General.SessionDescription = BpodSystem.Data.Info.SessionDescription;
-    end
-
-    % append session description in setting into data.info
-    if TaskParameters.GUI.SessionDescription ~= BpodSystem.Data.Info.SessionDescription(end)
-        BpodSystem.Data.Info.SessionDescription = [BpodSystem.Data.Info.SessionDescription, TaskParameters.GUI.SessionDescription];
-        BpodSystem.Data.Custom.General.SessionDescription = BpodSystem.Data.Info.SessionDescription;
-    end
-    
-    % update fields
-    UpdateCustomDataFields(iTrial);
-    SaveBpodSessionData();
-    
+        
     % update figures
     NosePoke_PlotSideOutcome(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
     
@@ -112,6 +106,8 @@ while RunSession
     
     iTrial = iTrial + 1;    
 end % Main loop
+
+clear Player % release the serial port (done automatically when function returns)
 
 if TaskParameters.GUI.Photometry
     CheckPhotometry(PhotoData, Photo2Data);
