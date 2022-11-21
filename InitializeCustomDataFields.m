@@ -68,6 +68,15 @@ if TaskParameters.GUI.RandomReward == true && trial_data.RandomThresholdPassed(i
     trial_data.RewardMagnitude(iTrial,:) = trial_data.RewardMagnitude(iTrial,:)+surpriseRewardAmount;    
 end
 
+% light-guided - with change in state matrix, here only to for data output
+if TaskParameters.GUI.LightGuided
+    if trial_data.LightLeft(iTrial)
+        trial_data.RewardMagnitude(iTrial,2) = 0;
+    elseif ~trial_data.LightLeft(iTrial)
+        trial_data.RewardMagnitude(iTrial,1) = 0;
+    end
+end
+
 %% Auto-Incrementing sample time
 if TaskParameters.GUI.AutoIncrSample && iTrial > 1
     History = 50; % Rat: History = 50

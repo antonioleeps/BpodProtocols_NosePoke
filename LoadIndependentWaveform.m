@@ -9,7 +9,8 @@ SoundIndex = 1;
 Player.loadWaveform(SoundIndex, PunishSound);
 
 SoundLevel = 0.8;
-ErrorSound = 1 * SoundLevel;
+ErrorSound = rand(1, fs*TaskParameters.GUI.EarlyWithdrawalTimeOut)*2 - 1; 
+% ErrorSound = ErrorSound * SoundLevel;
 SoundIndex = 2;
 Player.loadWaveform(SoundIndex, ErrorSound);
 
