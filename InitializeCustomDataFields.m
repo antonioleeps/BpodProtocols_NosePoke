@@ -89,15 +89,15 @@ if TaskParameters.GUI.AutoIncrSample && iTrial > 1
     ConsiderTrials = ConsiderTrials(~isnan(trial_data.ChoiceLeft(ConsiderTrials))|trial_data.EarlyWithdrawal(ConsiderTrials));
     if sum(~trial_data.EarlyWithdrawal(ConsiderTrials))/length(ConsiderTrials) > Crit % If SuccessRate > crit (80%)
         if ~trial_data.EarlyWithdrawal(iTrial-1) % If last trial is not EWD
-            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial) + TaskParameters.GUI.MinSampleIncr)); % SampleTime increased
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial-1) + TaskParameters.GUI.MinSampleIncr)); % SampleTime increased
         else % If last trial = EWD
-            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial))); % SampleTime = max(MinSampleTime or SampleTime)
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial-1))); % SampleTime = max(MinSampleTime or SampleTime)
         end
     elseif sum(~trial_data.EarlyWithdrawal(ConsiderTrials))/length(ConsiderTrials) < Crit/2  % If SuccessRate < crit/2 (40%)
         if trial_data.EarlyWithdrawal(iTrial-1) % If last trial = EWD
-            trial_data.SampleTime(iTrial) = max(TaskParameters.GUI.MinSampleTime,min(TaskParameters.GUI.MaxSampleTime,trial_data.SampleTime(iTrial) - TaskParameters.GUI.MinSampleDecr)); % SampleTime decreased
+            trial_data.SampleTime(iTrial) = max(TaskParameters.GUI.MinSampleTime,min(TaskParameters.GUI.MaxSampleTime,trial_data.SampleTime(iTrial-1) - TaskParameters.GUI.MinSampleDecr)); % SampleTime decreased
         else
-            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial))); % SampleTime = max(MinSampleTime or SampleTime)
+            trial_data.SampleTime(iTrial) = min(TaskParameters.GUI.MaxSampleTime,max(TaskParameters.GUI.MinSampleTime,trial_data.SampleTime(iTrial-1))); % SampleTime = max(MinSampleTime or SampleTime)
         end
     else % If crit/2 < SuccessRate < crit
         trial_data.SampleTime(iTrial) =  trial_data.SampleTime(iTrial-1); % SampleTime unchanged
