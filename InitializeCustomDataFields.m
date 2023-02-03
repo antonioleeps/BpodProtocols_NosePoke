@@ -41,7 +41,7 @@ trial_data.RandomThresholdPassed(iTrial) = rand(1) < TaskParameters.GUI.RandomRe
 trial_data.RandomRewardAmount(iTrial, :) = TaskParameters.GUI.RandomRewardMultiplier*[TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
 
 %% Reward Magnitude in different situations
-trial_data.RewardMagnitude(iTrial,:) = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount];
+trial_data.RewardMagnitude(:, iTrial) = [TaskParameters.GUI.rewardAmount,TaskParameters.GUI.rewardAmount]';
 
 % depletion
 %if a random reward appears - it does not disrupt the previous depletion
@@ -50,14 +50,14 @@ trial_data.RewardMagnitude(iTrial,:) = [TaskParameters.GUI.rewardAmount,TaskPara
 %right choices 25 - 20 -16- 12.8 - 10.24 -8.192 - 5.2429 - 37.5 - 4.194
 
 if TaskParameters.GUI.Deplete && iTrial > 1
-    DummyRewardMag = trial_data.RewardMagnitude(iTrial-1,:);
+    DummyRewardMag = trial_data.RewardMagnitude(:, iTrial-1);
     
     if  trial_data.ChoiceLeft(iTrial-1) == 1
-        trial_data.RewardMagnitude(iTrial,1) = DummyRewardMag(1,1)*TaskParameters.GUI.DepleteRateLeft;
+        trial_data.RewardMagnitude(1, iTrial) = DummyRewardMag(1,1)*TaskParameters.GUI.DepleteRateLeft;
     elseif trial_data.ChoiceLeft(iTrial-1) == 0
-        trial_data.RewardMagnitude(iTrial,2) = DummyRewardMag(1,2)*TaskParameters.GUI.DepleteRateRight;
+        trial_data.RewardMagnitude(2, iTrial) = DummyRewardMag(1,2)*TaskParameters.GUI.DepleteRateRight;
     elseif isnan(trial_data.ChoiceLeft(iTrial-1))
-        trial_data.RewardMagnitude(iTrial,:) = trial_data.RewardMagnitude(iTrial-1,:);
+        trial_data.RewardMagnitude(:, iTrial) = trial_data.RewardMagnitude(:, iTrial-1);
     end
 end
 
@@ -65,15 +65,15 @@ end
 
 if TaskParameters.GUI.RandomReward == true && trial_data.RandomThresholdPassed(iTrial)==1
     surpriseRewardAmount = TaskParameters.GUI.rewardAmount*TaskParameters.GUI.RandomRewardMultiplier;
-    trial_data.RewardMagnitude(iTrial,:) = trial_data.RewardMagnitude(iTrial,:)+surpriseRewardAmount;    
+    trial_data.RewardMagnitude(:, iTrial) = trial_data.RewardMagnitude(:, iTrial) + surpriseRewardAmount;    
 end
 
 % light-guided - with change in state matrix, here only to for data output
 if TaskParameters.GUI.LightGuided
     if trial_data.LightLeft(iTrial)
-        trial_data.RewardMagnitude(iTrial,2) = 0;
+        trial_data.RewardMagnitude(2, iTrial) = 0;
     elseif ~trial_data.LightLeft(iTrial)
-        trial_data.RewardMagnitude(iTrial,1) = 0;
+        trial_data.RewardMagnitude(1, iTrial) = 0;
     end
 end
 
