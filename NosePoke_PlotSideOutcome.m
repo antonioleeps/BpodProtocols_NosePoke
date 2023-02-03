@@ -68,7 +68,7 @@ switch Action
         [mn, ~] = rescaleX(AxesHandles.HandleOutcome,CurrentTrial,nTrialsToShow);
         
         %Cumulative Reward Amount
-        reward_total = calculate_cumulative_reward();
+        reward_total = CalculateCumulativeReward();
         set(BpodSystem.GUIHandles.OutcomePlot.CumRwd, ...
             'position', [CurrentTrial+1 1], ...
             'string', [num2str(reward_total) ' microL']);

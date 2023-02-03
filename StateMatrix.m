@@ -21,21 +21,21 @@ CenterValve = 2^(CenterPort-1);
 RightValve = 2^(RightPort-1);
 
 %% Calculate value time for ports in different situations
-LeftValveTime  = GetValveTimes(trial_data.RewardMagnitude(iTrial,1), LeftPort);
+LeftValveTime  = GetValveTimes(trial_data.RewardMagnitude(1, iTrial), LeftPort);
 if rand(1,1) <= TaskParameters.GUI.CenterPortProb && TaskParameters.GUI.Jackpot == 4
     CenterValveTime  = min([0.1,max([0.001,GetValveTimes(trial_data.CenterPortRewAmount(iTrial), CenterPort)])]);
 else
     CenterValveTime=0;
 end
-RightValveTime  = GetValveTimes(trial_data.RewardMagnitude(iTrial,2), RightPort);
+RightValveTime  = GetValveTimes(trial_data.RewardMagnitude(2, iTrial), RightPort);
 
 if TaskParameters.GUI.Jackpot == 3 % Decremental Jackpot reward
     JackpotFactor = max(2,10 - sum(trial_data.Jackpot)); 
 else 
     JackpotFactor = 2; % Fixed Jackpot reward
 end
-LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(iTrial,1), LeftPort);
-RightValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(iTrial,2), RightPort);
+LeftValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(1, iTrial), LeftPort);
+RightValveTimeJackpot  = JackpotFactor*GetValveTimes(trial_data.RewardMagnitude(2, iTrial), RightPort);
 
 %% Sound Output action
 StimStartOutput = {};
