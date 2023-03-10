@@ -75,13 +75,12 @@ while RunSession
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
         [PhotoData,Photo2Data] = Nidaq_photometry('Save');
-        BpodSystem.Data.TrialData.NidaqData{iTrial} = PhotoData;
+        BpodSystem.Data.Custom.Data.NidaqData{iTrial} = PhotoData;
         if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
             BpodSystem.Data.TrialData.Nidaq2Data{iTrial} = Photo2Data;
         end
-        PlotPhotometryData(FigNidaq1, FigNidaq2, PhotoData, Photo2Data);
     end
-    
+   
     % Bpod save & update fields
     if ~isempty(fieldnames(RawEvents))
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents);
@@ -101,7 +100,7 @@ while RunSession
     
     %% update photometry plots
     if TaskParameters.GUI.Photometry
-        PlotPhotometryData(FigNidaq1,FigNidaq2, PhotoData, Photo2Data);
+        PlotPhotometryData(iTrial, FigNidaq1,FigNidaq2, PhotoData, Photo2Data);
     end
     
     iTrial = iTrial + 1;    
