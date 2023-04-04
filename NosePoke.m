@@ -75,9 +75,9 @@ while RunSession
     if TaskParameters.GUI.Photometry
         Nidaq_photometry('Stop');
         [PhotoData,Photo2Data] = Nidaq_photometry('Save');
-        BpodSystem.Data.Custom.Data.NidaqData{iTrial} = PhotoData;
+        NidaqData = PhotoData;
         if TaskParameters.GUI.DbleFibers || TaskParameters.GUI.RedChannel
-            BpodSystem.Data.TrialData.Nidaq2Data{iTrial} = Photo2Data;
+            Nidaq2Data = Photo2Data;
         else
             Nidaq2Data=[];
         end
