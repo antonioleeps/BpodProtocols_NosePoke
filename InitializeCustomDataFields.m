@@ -53,9 +53,9 @@ if TaskParameters.GUI.Deplete && iTrial > 1
     DummyRewardMag = trial_data.RewardMagnitude(:, iTrial-1);
     
     if  trial_data.ChoiceLeft(iTrial-1) == 1
-        trial_data.RewardMagnitude(1, iTrial) = DummyRewardMag(1,1)*TaskParameters.GUI.DepleteRateLeft;
+        trial_data.RewardMagnitude(1, iTrial) = DummyRewardMag(1)*TaskParameters.GUI.DepleteRateLeft;
     elseif trial_data.ChoiceLeft(iTrial-1) == 0
-        trial_data.RewardMagnitude(2, iTrial) = DummyRewardMag(1,2)*TaskParameters.GUI.DepleteRateRight;
+        trial_data.RewardMagnitude(2, iTrial) = DummyRewardMag(2)*TaskParameters.GUI.DepleteRateRight;
     elseif isnan(trial_data.ChoiceLeft(iTrial-1))
         trial_data.RewardMagnitude(:, iTrial) = trial_data.RewardMagnitude(:, iTrial-1);
     end
@@ -77,6 +77,8 @@ if TaskParameters.GUI.LightGuided
     end
 end
 
+trial_data.RewardMagnitudeL(iTrial) = trial_data.RewardMagnitude(1, iTrial);
+trial_data.RewardMagnitudeR(iTrial) = trial_data.RewardMagnitude(2, iTrial);
 %% Auto-Incrementing sample time
 if TaskParameters.GUI.AutoIncrSample && iTrial > 1
     History = 50; % Rat: History = 50

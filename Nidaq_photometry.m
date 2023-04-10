@@ -10,10 +10,10 @@ nidaq.duration      	= TaskParameters.GUI.NidaqDuration;
 nidaq.sample_rate     	= TaskParameters.GUI.NidaqSamplingRate;
 nidaq.ai_channels       = {'ai0','ai1'};  
 nidaq.ai_data           = [];
-nidaq.ao_channels       = {'ao0','ao1'};           % LED1 and LED2
+nidaq.ao_channels       = {'ao0','ao1'};           % LED1 and LED2 {'ao0','ao1'}
 nidaq.ao_data           = [];
 
-daq.reset
+daqreset
 daq.HardwareInfo.getInstance('DisableReferenceClockSynchronization',true); % Necessary for this Nidaq
 
 %create nidaq session
